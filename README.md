@@ -40,3 +40,4 @@ Simply double-click `index.html` or `Aadhaar_Kendra_Assistant.html` in any moder
 
 ## 📄 Documentation
 For the complete operational manual and operator instructions, see [OPERATOR_MANUAL.md](OPERATOR_MANUAL.md).
+
