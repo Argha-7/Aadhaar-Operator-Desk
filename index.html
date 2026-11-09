@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#1e3a8a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1658,6 +1661,26 @@
   </div>
 
   <script>
+        // ================= SECURITY DEFENSE & SANITIZATION =================
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeCSV(val) {
+      if (val === null || val === undefined) return '""';
+      let s = String(val);
+      if (/^[=\+\-@\t\r]/.test(s)) {
+        s = "'" + s;
+      }
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+
     let currentAge = 'above18';
     let lastRecorded = null;
     let toastTimeout = null;
@@ -2046,7 +2069,7 @@
         const s = seatMap[i] || { name: '', status: 'open' };
         const sPad = i < 10 ? '0' + i : i;
         const sStatus = s.status === 'closed' ? 'Closed' : 'Active';
-        csv += `"Seat #${sPad}","${(s.name || '').replace(/"/g, '""')}","${sStatus}"\n`;
+        csv += `"Seat #${sPad}",` + sanitizeCSV(s.name || '') + `,"${sStatus}"\n`;
       }
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2280,7 +2303,7 @@
 
       const input = prompt(`[Counter Calibration]\nCurrent category has ${curSum} entries.\nEnter custom total or starting count to adjust:`, curSum);
       if (input !== null && !isNaN(parseInt(input))) {
-        const newCount = parseInt(input);
+        const newCount = Math.max(0, Math.min(99999, parseInt(input)));
         // Calibrate by distributing or setting first service
         if (buttonOrder.length > 0) {
           const firstKey = buttonOrder[0];
@@ -2335,9 +2358,9 @@
 
         seat.innerHTML = `
           <div class="seat-num">${seatPad}</div>
-          <div class="seat-name-text">${opName || (isClosed ? 'CLOSED' : '')}</div>
+          <div class="seat-name-text">${escapeHTML(opName) || (isClosed ? 'CLOSED' : '')}</div>
           <div class="seat-tooltip">
-            Seat #${seatPad}: ${opName || 'Available'}<br>
+            Seat #${seatPad}: ${escapeHTML(opName) || 'Available'}<br>
             <span style="font-size:10px; opacity:0.85;">${statusText}</span>
           </div>
         `;
@@ -2463,7 +2486,8 @@
 
     function saveCurrentSeatName() {
       const input = document.getElementById('seatOperatorInput');
-      const name = input ? input.value.trim() : '';
+      let name = input ? input.value.trim() : '';
+      name = name.replace(/<[^>]*>/g, '').slice(0, 45);
       const seatPad = selectedSeatNumber < 10 ? '0' + selectedSeatNumber : selectedSeatNumber;
 
       if (!seatMap[selectedSeatNumber]) seatMap[selectedSeatNumber] = { name: '', status: 'open' };
@@ -2745,7 +2769,7 @@
         if (s && s.name) {
           hasSeatInfo = true;
           const statusIcon = s.status === 'closed' ? '🔴' : '🟢';
-          seatsHtml += `<div><b>#${i < 10 ? '0' + i : i}:</b> ${s.name} ${statusIcon}</div>`;
+          seatsHtml += `<div><b>#${i < 10 ? '0' + i : i}:</b> ${escapeHTML(s.name)} ${statusIcon}</div>`;
         }
       }
       seatsHtml += '</div>';
@@ -2765,11 +2789,11 @@
           item.className = 'audit-log-item';
           item.innerHTML = `
             <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-              <b style="color:var(--primary);">${t.serviceTitle}</b>
-              <span class="audit-time">${t.time}</span>
+              <b style="color:var(--primary);">${escapeHTML(t.serviceTitle)}</b>
+              <span class="audit-time">${escapeHTML(t.time)}</span>
             </div>
             <div style="color:#475569; font-size:11px;">
-              ${t.ageLabel} • <b>Seat #${t.seatNum < 10 ? '0' + t.seatNum : t.seatNum} (${t.operator})</b>
+              ${escapeHTML(t.ageLabel)} • <b>Seat #${t.seatNum < 10 ? '0' + t.seatNum : t.seatNum} (${escapeHTML(t.operator)})</b>
             </div>
           `;
           auditContainer.appendChild(item);
@@ -2888,7 +2912,7 @@
         cleaned = cleaned.replace(/^[\-\•\*\>]\s*/, '').trim();
         // Clean suffix like "- Desk 1", "(Operator)"
         cleaned = cleaned.replace(/\s*[\-\–]\s*(?:desk|seat|counter)\s*\d+/i, '').trim();
-        cleaned = cleaned.replace(/\s*\([^)]*\)$/, '').trim();
+        cleaned = cleaned.replace(/\s*\([^)]*\)$/, '').replace(/<[^>]*>/g, '').trim().slice(0, 45);
         if (cleaned && cleaned.length > 1) {
           cleanedNames.push(cleaned);
         }
