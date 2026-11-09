@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/assistant",
+      "destination": "/Aadhaar_Kendra_Assistant.html"
+    }
+  ]
+}
+

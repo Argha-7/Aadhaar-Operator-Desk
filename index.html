@@ -1,0 +1,3352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Aadhaar Operator Quick Assistant</title>
+
+  <!-- Google Firebase SDK (Compat Version for Web Browsers) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #2563eb;
+      --primary-dark: #0f172a;
+      --accent: #0284c7;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --card-bg: #e2e8f0;
+      --card-active: #1e3a8a;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --bg-page: #f8fafc;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-pill: 0 2px 4px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #cbd5e1;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 0;
+      color: var(--text-main);
+    }
+
+    /* MOBILE CONTAINER SCREEN */
+    .mobile-frame {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-page);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      padding: 20px 18px 110px 18px;
+    }
+
+    /* TOP HEADER BAR */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .brand-title {
+      font-size: 16.5px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: #f1f5f9;
+      color: var(--primary);
+    }
+
+    /* TOP 3 AGE BUTTONS LAYOUT (EXACT SKELETON) */
+    .age-top-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .age-btn {
+      background: var(--card-bg);
+      color: #334155;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      line-height: 1.35;
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 56px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .age-btn:active {
+      transform: scale(0.97);
+    }
+
+    .age-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+    }
+
+    .age-btn .count-sub {
+      font-size: 11px;
+      opacity: 0.85;
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    .age-btn.active .count-sub {
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    .age-btn-center-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .age-btn-center {
+      width: 62%;
+      background: var(--card-bg);
+      color: #334155;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 11px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .age-btn-center:active {
+      transform: scale(0.97);
+    }
+
+    .age-btn-center.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+    }
+
+    .age-btn-center.active .count-sub {
+      color: #93c5fd;
+      font-weight: 600;
+    }
+
+    /* 2-COLUMN GRID OF CAPSULE / PILL BUTTONS (EXACT SKELETON) */
+    .pills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 12px;
+    }
+
+    .pill-card {
+      position: relative;
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 9999px;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 44px 8px 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-pill);
+    }
+
+    .pill-card:active {
+      transform: scale(0.96);
+      background: #cbd5e1;
+    }
+
+    .pill-card.pulse {
+      animation: tapPulse 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes tapPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.93); background: #2563eb; color: white; }
+      100% { transform: scale(1); }
+    }
+
+    .pill-text-wrap {
+      text-align: center;
+      line-height: 1.25;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .pill-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1e293b;
+      letter-spacing: -0.2px;
+    }
+
+    .pill-count-badge {
+      font-size: 11px;
+      font-weight: 800;
+      color: #475569;
+      background: #ffffff;
+      padding: 1px 8px;
+      border-radius: 20px;
+      border: 1px solid #cbd5e1;
+      min-width: 24px;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .pill-count-badge.has-count {
+      background: var(--primary-light);
+      color: #ffffff;
+      border-color: var(--primary-light);
+      box-shadow: 0 1px 4px rgba(37, 99, 235, 0.35);
+    }
+
+    /* THE (i) ICON CIRCLE */
+    .info-circle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #2563eb;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: "Georgia", serif;
+      font-style: italic;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+      transition: all 0.15s ease;
+      z-index: 2;
+    }
+
+    .info-circle:active {
+      transform: translateY(-50%) scale(1.15);
+      background: #eff6ff;
+      border-color: #2563eb;
+    }
+
+    /* TOAST ALERT NOTIFICATION WITH SMART UNDO */
+    .toast {
+      position: fixed;
+      bottom: 84px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: #0f172a;
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 25px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      z-index: 1000;
+      opacity: 0;
+      transition: all 0.26s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .toast-undo-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    /* MODAL OVERLAYS */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(3px);
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 999;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 420px;
+      border-radius: 24px 24px 0 0;
+      padding: 22px 20px 28px 20px;
+      max-height: 88vh;
+      overflow-y: auto;
+      animation: popUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -4px 25px rgba(0,0,0,0.2);
+    }
+
+    @keyframes popUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-drag-bar {
+      width: 44px;
+      height: 4px;
+      background: #cbd5e1;
+      border-radius: 10px;
+      margin: 0 auto 14px auto;
+    }
+
+    .modal-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e2e8f0;
+      gap: 10px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.3px;
+      line-height: 1.3;
+    }
+
+    .form-badge-tag {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      white-space: nowrap;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* MANDATORY FIELDS LIST STYLING */
+    .field-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid var(--primary-light);
+      padding: 10px 12px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 9px;
+      font-size: 13px;
+      line-height: 1.45;
+      position: relative;
+    }
+
+    .field-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .field-num {
+      font-weight: 800;
+      color: var(--primary);
+      font-size: 13px;
+    }
+
+    .badge-req {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .field-instruction {
+      color: #334155;
+      font-size: 12.5px;
+    }
+
+    .field-instruction b {
+      color: #0f172a;
+    }
+
+    .blank-tip {
+      background: #f1f5f9;
+      border: 1px dashed #cbd5e1;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .close-modal-btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: background 0.15s ease;
+    }
+
+    .close-modal-btn:hover {
+      background: #1e40af;
+    }
+
+    /* BOTTOM BAR FOOTER */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 420px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 11px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 50;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+    }
+
+    .bottom-total {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bottom-total span {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .btn-action {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 8px 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-action.danger {
+      color: var(--danger);
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    /* REORDER & SETTINGS MODAL STYLING */
+    .reorder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .reorder-item {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 9px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .reorder-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .reorder-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      color: #334155;
+    }
+
+    .reorder-btn:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+    }
+
+    /* FIELD EDITOR STYLING */
+    .editor-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .editor-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+    }
+
+    /* ADVANCE OPTIONS DROPDOWN & OPERATOR DESK STYLING */
+    .advance-container {
+      margin-top: 18px;
+      margin-bottom: 0px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .advance-dropdown {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .advance-header {
+      padding: 11px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      background: #f8fafc;
+      user-select: none;
+    }
+
+    .advance-header:hover {
+      background: #f1f5f9;
+      color: var(--primary);
+    }
+
+    .advance-body {
+      display: none;
+      padding: 12px 14px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #ffffff;
+      line-height: 1.5;
+    }
+
+    .advance-body.open {
+      display: block;
+    }
+
+    .counter-set-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      color: #1e293b;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .counter-set-btn:hover {
+      border-color: #2563eb;
+      background: #f8fafc;
+    }
+
+    .counter-set-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .counter-icon-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* CINEMA / MOVIE THEATER SEATS (18 SEATS) - SPACED DOWN & PADDED */
+    .cinema-section {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 16px 14px 18px 14px;
+      margin-top: 20px;
+      margin-bottom: 26px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cinema-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .cinema-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .cinema-screen-bar {
+      text-align: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 2px solid #cbd5e1;
+      border-radius: 50%;
+      padding-bottom: 3px;
+      margin-bottom: 12px;
+    }
+
+    /* 4 SEATS PER ROW GRID */
+    .seats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px 6px;
+      justify-items: center;
+      margin-bottom: 12px;
+    }
+
+    /* COMPACT MOVIE SEAT STYLING */
+    .cinema-seat {
+      width: 100%;
+      max-width: 64px;
+      height: 38px;
+      background: #dcfce7;
+      border: 1.5px solid #16a34a;
+      border-radius: 8px 8px 5px 5px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: all 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    /* Seat Headrest / Cushion Top */
+    .cinema-seat::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      width: 28px;
+      height: 4px;
+      background: inherit;
+      border-radius: 3px 3px 0 0;
+      border: 1.5px solid inherit;
+      border-bottom: none;
+    }
+
+    /* Seat Armrest Base */
+    .cinema-seat::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      width: 48px;
+      height: 2px;
+      background: rgba(0,0,0,0.12);
+      border-radius: 2px;
+    }
+
+    .cinema-seat .seat-num {
+      font-size: 10px;
+      font-weight: 800;
+      color: #15803d;
+      line-height: 1;
+    }
+
+    .cinema-seat .seat-name-text {
+      font-size: 8px;
+      font-weight: 700;
+      color: #166534;
+      max-width: 56px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+      margin-top: 1px;
+    }
+
+    .cinema-seat:hover {
+      transform: translateY(-2px);
+      z-index: 10;
+    }
+
+    /* Centering row 5 (Seats 17 & 18) */
+    .cinema-seat:nth-child(17) {
+      grid-column: 2;
+    }
+    .cinema-seat:nth-child(18) {
+      grid-column: 3;
+    }
+
+    /* DEFAULT: ALL SEATS ARE GREEN */
+    .cinema-seat.seat-open {
+      background: #dcfce7;
+      border-color: #16a34a;
+    }
+    .cinema-seat.seat-open::before {
+      background: #dcfce7;
+      border-color: #16a34a;
+    }
+    .cinema-seat.seat-open .seat-num {
+      color: #15803d;
+    }
+    .cinema-seat.seat-open .seat-name-text {
+      color: #15803d;
+    }
+
+    /* CLOSED SEAT: RED */
+    .cinema-seat.seat-closed {
+      background: #fee2e2 !important;
+      border-color: #dc2626 !important;
+    }
+    .cinema-seat.seat-closed::before {
+      background: #fee2e2 !important;
+      border-color: #dc2626 !important;
+    }
+    .cinema-seat.seat-closed .seat-num {
+      color: #b91c1c !important;
+    }
+    .cinema-seat.seat-closed .seat-name-text {
+      color: #b91c1c !important;
+    }
+
+    /* SELECTED SEAT (ACTIVE BLUE GLOW) */
+    .cinema-seat.selected {
+      transform: scale(1.06);
+      box-shadow: 0 0 0 2.5px #2563eb, 0 4px 12px rgba(37,99,235,0.3);
+      z-index: 15;
+    }
+
+    /* HOVER TOOLTIP FOR FULL OPERATOR NAME */
+    .cinema-seat .seat-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: 122%;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: #0f172a;
+      color: #ffffff;
+      text-align: center;
+      padding: 5px 8px;
+      border-radius: 7px;
+      font-size: 10.5px;
+      font-weight: 700;
+      white-space: nowrap;
+      z-index: 99;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      pointer-events: none;
+      transition: all 0.16s ease;
+      line-height: 1.3;
+    }
+    .cinema-seat .seat-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #0f172a transparent transparent transparent;
+    }
+    .cinema-seat:hover .seat-tooltip {
+      visibility: visible;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    /* Edge boundaries to prevent tooltip cutoff */
+    .cinema-seat:nth-child(4n + 1) .seat-tooltip {
+      left: 0;
+      transform: translateX(0) translateY(4px);
+    }
+    .cinema-seat:nth-child(4n + 1):hover .seat-tooltip {
+      transform: translateX(0) translateY(0);
+    }
+    .cinema-seat:nth-child(4n + 1) .seat-tooltip::after {
+      left: 16px;
+    }
+    .cinema-seat:nth-child(4n) .seat-tooltip {
+      left: auto;
+      right: 0;
+      transform: translateX(0) translateY(4px);
+    }
+    .cinema-seat:nth-child(4n):hover .seat-tooltip {
+      transform: translateX(0) translateY(0);
+    }
+    .cinema-seat:nth-child(4n) .seat-tooltip::after {
+      left: auto;
+      right: 16px;
+    }
+
+    .seat-toggle-badge {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 10.5px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #ffffff;
+    }
+
+    .seat-edit-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .seat-edit-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .date-badge {
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11.5px;
+      font-weight: 700;
+      border: 1px solid #bfdbfe;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .cloud-status-badge {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+      border-radius: 20px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .cloud-status-badge:hover {
+      opacity: 0.88;
+    }
+    .cloud-status-badge.connected {
+      background: #dcfce7;
+      color: #15803d;
+      border-color: #86efac;
+    }
+
+    /* HISTORY MODAL & DATABASE STYLES */
+    .btn-action.history-btn {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #93c5fd;
+      font-weight: 800;
+    }
+    .btn-action.history-btn:hover {
+      background: #dbeafe;
+    }
+
+    .history-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 8px;
+    }
+
+    .history-tab-btn {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .history-tab-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .history-date-select {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1.5px solid #93c5fd;
+      border-radius: 9px;
+      background: #eff6ff;
+      color: #1e3a8a;
+      margin-bottom: 12px;
+    }
+
+    .history-summary-banner {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: #ffffff;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-stat-pills {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .history-stat-pill {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .history-stat-pill .h-val {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .history-stat-pill .h-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .history-service-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .history-service-row:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    .history-badge-count {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .audit-log-item {
+      padding: 8px 10px;
+      border-left: 3px solid #2563eb;
+      background: #f8fafc;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 7px;
+      font-size: 11.5px;
+      line-height: 1.4;
+    }
+
+    .audit-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    /* FULLPAGE AADHAAR ANIMATION LOADING SCREEN */
+    .splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: radial-gradient(circle at center, #1e3a8a 0%, #0a0f1d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #ffffff;
+      transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), transform 0.45s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .splash-screen.fade-out {
+      opacity: 0;
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+    .splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 320px;
+      width: 100%;
+    }
+    .splash-tricolor {
+      display: flex;
+      width: 64px;
+      height: 4px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 0 12px rgba(255, 153, 51, 0.6);
+    }
+    .splash-tricolor span {
+      flex: 1;
+      height: 100%;
+    }
+    .scanner-wrap {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .scanner-pulse-ring {
+      position: absolute;
+      inset: -6px;
+      border: 2px solid rgba(56, 189, 248, 0.5);
+      border-radius: 50%;
+      animation: pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    .scanner-pulse-ring.delay {
+      animation-delay: 0.9s;
+    }
+    @keyframes pulseRing {
+      0% { transform: scale(0.85); opacity: 0.8; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+    .fingerprint-svg {
+      width: 82px;
+      height: 82px;
+      filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.7));
+    }
+    .laser-beam {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #38bdf8, #ffffff, #38bdf8, transparent);
+      box-shadow: 0 0 14px 2px #38bdf8;
+      border-radius: 2px;
+      animation: scanLaser 1.5s ease-in-out infinite alternate;
+    }
+    @keyframes scanLaser {
+      0% { top: 14px; opacity: 0.2; }
+      50% { opacity: 1; }
+      100% { top: 92px; opacity: 0.2; }
+    }
+    .splash-brand {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 2.5px;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      margin-bottom: 4px;
+    }
+    .splash-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+      margin-bottom: 20px;
+    }
+    .splash-progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .splash-progress-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #38bdf8, #60a5fa, #34d399);
+      border-radius: 9999px;
+      transition: width 0.22s ease;
+      box-shadow: 0 0 10px #38bdf8;
+    }
+    .splash-status {
+      font-size: 11px;
+      color: #cbd5e1;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      min-height: 16px;
+    }
+    .splash-skip-tip {
+      font-size: 9.5px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 14px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- FULLPAGE AADHAAR ANIMATION SPLASH LOADING SCREEN -->
+  <div id="aadhaarSplash" class="splash-screen" onclick="dismissSplash()">
+    <div class="splash-content">
+      <!-- Indian Tricolor Ribbon -->
+      <div class="splash-tricolor">
+        <span style="background: #ff9933;"></span>
+        <span style="background: #ffffff;"></span>
+        <span style="background: #138808;"></span>
+      </div>
+
+      <!-- Biometric Scanner Ring & Fingerprint SVG -->
+      <div class="scanner-wrap">
+        <div class="scanner-pulse-ring"></div>
+        <div class="scanner-pulse-ring delay"></div>
+        
+        <svg class="fingerprint-svg" viewBox="0 0 100 100" fill="none" stroke="currentColor">
+          <path d="M50 18 C68 18 82 32 82 50 C82 68 68 82 50 82 C32 82 18 68 18 50 C18 32 32 18 50 18" stroke="rgba(255,255,255,0.2)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M50 26 C64 26 74 36 74 50 C74 64 64 74 50 74 C36 74 26 64 26 50 C26 36 36 26 50 26" stroke="rgba(255,255,255,0.35)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M50 34 C60 34 66 40 66 50 C66 60 60 66 50 66 C40 66 34 60 34 50 C34 40 40 34 50 34" stroke="rgba(56, 189, 248, 0.85)" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M50 42 C54 42 58 46 58 50 C58 54 54 58 50 58 C46 58 42 54 42 50" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+
+        <!-- Laser Scanner Beam -->
+        <div class="laser-beam"></div>
+      </div>
+
+      <!-- Brand & Terminal Info -->
+      <div class="splash-brand">AADHAAR DESK</div>
+      <div class="splash-sub">Operator Quick Enrolment & Update Terminal</div>
+
+      <!-- Progress Track -->
+      <div class="splash-progress-track">
+        <div class="splash-progress-bar" id="splashBar"></div>
+      </div>
+
+      <div class="splash-status" id="splashStatusText">Initializing Operator Terminal...</div>
+      <div class="splash-skip-tip">Tap anywhere to enter</div>
+    </div>
+  </div>
+
+  <div class="mobile-frame">
+
+    <!-- TOP HEADER -->
+    <div class="top-header">
+      <div class="brand-title">
+        <span>🇮🇳</span> Aadhaar Desk
+      </div>
+      <div class="date-badge" id="currentDateDisplay">Today</div>
+    </div>
+
+    <!-- TOP ROW: 2 AGE BUTTONS (EXACT SKELETON) -->
+    <div class="age-top-grid">
+      <div class="age-btn" id="btn_under5" onclick="selectAge('under5')">
+        Under 5 Years (Bal Aadhaar)
+        <span class="count-sub" id="sub_under5">0 Completed</span>
+      </div>
+      <div class="age-btn" id="btn_5to18" onclick="selectAge('5to18')">
+        5 to 18 Years (Minor & MBU)
+        <span class="count-sub" id="sub_5to18">0 Completed</span>
+      </div>
+    </div>
+
+    <!-- SECOND ROW: 1 CENTERED BUTTON (EXACT SKELETON) -->
+    <div class="age-btn-center-wrap">
+      <div class="age-btn-center active" id="btn_above18" onclick="selectAge('above18')">
+        18 and Above (Adults)
+        <span class="count-sub" id="sub_above18">0 Completed</span>
+      </div>
+    </div>
+
+    <!-- 8 PILL/CAPSULE BUTTONS (DYNAMICALLY RENDERED TO SUPPORT REORDERING) -->
+    <div class="pills-grid" id="pillsContainer">
+      <!-- Injected dynamically based on user's custom button order -->
+    </div>
+
+    <!-- ADVANCE DROPDOWN (PLACED ABOVE COUNTER SEATS) -->
+    <div class="advance-container">
+      <div class="advance-dropdown">
+        <div class="advance-header" onclick="toggleAdvanceDropdown()">
+          <span>⚙️ Advance Options & Tools</span>
+          <span id="advChevron" style="font-size: 11px; transition: transform 0.2s;">▼</span>
+        </div>
+        <div class="advance-body" id="advBody">
+          <p style="margin-bottom: 8px; font-weight: 700; color: var(--primary);">⚡ Extra Tools & Advance Customizations:</p>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- 1. Bulk Paste WhatsApp Operator Roster -->
+            <button class="counter-set-btn" onclick="openRosterModal()" style="box-shadow: none; border-color: #e2e8f0;">
+              <div class="counter-set-left">
+                <div class="counter-icon-badge" style="background: #f0fdf4; color: #15803d;">📋</div>
+                <div>
+                  <div style="font-size: 13px;">Bulk Paste Operator Roster</div>
+                  <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 500;">Paste WhatsApp seating list to fill all 18 seats</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: var(--primary); font-weight: 800;">📋 Paste</span>
+            </button>
+
+
+            <!-- 3. Change Button Order -->
+            <button class="counter-set-btn" onclick="openOrderModal()" style="box-shadow: none; border-color: #e2e8f0;">
+              <div class="counter-set-left">
+                <div class="counter-icon-badge" style="background: #eff6ff; color: #2563eb;">🔄</div>
+                <div>
+                  <div style="font-size: 13px;">Change Button Order</div>
+                  <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 500;">Reorder cards on main screen</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: var(--primary); font-weight: 800;">Open</span>
+            </button>
+
+            <!-- 4. Counter Calibration -->
+            <button class="counter-set-btn" onclick="openCounterSetPrompt()" style="box-shadow: none; border-color: #e2e8f0;">
+              <div class="counter-set-left">
+                <div class="counter-icon-badge">🔢</div>
+                <div>
+                  <div style="font-size: 13px;">Counter Calibration / Set</div>
+                  <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 500;">Set manual count</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: var(--primary); font-weight: 800;">⚙️ Set</span>
+            </button>
+
+            <!-- 5. Manual Day Reset (Moved safely into Advance Tools) -->
+            <button class="counter-set-btn" onclick="resetAllCounts()" style="box-shadow: none; border-color: #fee2e2; background: #fff5f5;">
+              <div class="counter-set-left">
+                <div class="counter-icon-badge" style="background: #fee2e2; color: #dc2626;">🗑️</div>
+                <div>
+                  <div style="font-size: 13px; color: #b91c1c;">Reset Current Day Counts</div>
+                  <div style="font-size: 10.5px; color: #ef4444; font-weight: 500;">Clear today's numbers for fresh shift</div>
+                </div>
+              </div>
+              <span style="font-size: 11px; color: #dc2626; font-weight: 800;">Reset</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 18 CINEMA / MOVIE COUNTER SEATS SECTION (MOVED DOWN & SPACIOUS) -->
+    <div class="cinema-section">
+      <div class="cinema-header">
+        <div class="cinema-title">
+          <span>🎬</span> Operator Counter Seats (1 - 18)
+        </div>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;" id="activeSeatLabel">Seat #01 Selected</span>
+      </div>
+
+      <div class="cinema-screen-bar">SCREEN / DESK COUNTER LINE</div>
+
+      <!-- 18 SEATS GRID (4 PER ROW) -->
+      <div class="seats-grid" id="seatsGrid">
+        <!-- Injected via JS (1 to 18 cinema seats) -->
+      </div>
+
+      <!-- SEAT OPERATOR NAME FIELD BELOW SEATS -->
+      <div class="seat-edit-box">
+        <div class="seat-edit-title">
+          <span id="seatEditHeader">👤 Seat #01 Operator:</span>
+          <button id="seatStatusBtn" class="seat-toggle-badge" onclick="toggleCurrentSeatStatus()">🟢 Active</button>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <input type="text" id="seatOperatorInput" class="editor-input" style="margin-bottom: 0;" placeholder="Enter operator name for this seat..." onkeydown="if(event.key==='Enter') saveCurrentSeatName()">
+          <button class="btn-action" onclick="saveCurrentSeatName()" style="background: var(--primary); color: white; border-color: var(--primary); padding: 8px 14px;">Save</button>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); margin-top: 6px; padding: 0 2px;">
+          <span>🟢 Default: Active</span>
+          <span>🔴 Closed: Double-click seat</span>
+          <span id="counterSummaryBadge" style="font-weight: 700; color: var(--primary);">18 Active | 0 Closed</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION WITH UNDO BUTTON -->
+    <div class="toast" id="toastBox">
+      <span>✓</span>
+      <span id="toastMsg">Action recorded!</span>
+      <button class="toast-undo-btn" onclick="undoLastAction()">Undo</button>
+    </div>
+
+    <!-- BOTTOM APP BAR (FOOTER - NO RESET BUTTON) -->
+    <div class="bottom-bar">
+      <div class="bottom-total" onclick="showSummaryAlert()" style="cursor: pointer;">
+        <span id="categoryLabelDisplay">Active: 18+ Adults (Form 1)</span>
+        <b id="grandTotalText">Total: 0 Completed</b>
+      </div>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <button class="btn-action history-btn" onclick="openHistoryModal()">📜 History</button>
+        <button class="btn-action" onclick="exportDataCSV()">📥 Excel</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- (i) INFO MODAL POPUP (EXACT MANDATORY FIELDS ONLY) -->
+  <div class="modal-overlay" id="helpModal" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-drag-bar"></div>
+      
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-title" id="mTitle">Mandatory Fields to Fill</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;" id="mSubTitle">Fill only these mandatory boxes</div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+          <div class="form-badge-tag" id="mFormBadge">FORM 1</div>
+          <button class="icon-btn" onclick="openCurrentServiceEditor()" style="padding: 2px 8px; font-size: 11px; color: var(--primary);">✏️ Edit</button>
+        </div>
+      </div>
+
+      <div id="mBody">
+        <!-- Injected dynamically showing only mandatory fields -->
+      </div>
+
+      <div class="blank-tip">
+        ⚡ <b>Tip:</b> Leave all other boxes blank on the form for this update.
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 12px;">
+        <button class="close-modal-btn" style="flex: 2; margin-top: 0;" onclick="closeModal()">Understood (Close)</button>
+        <button class="btn-action" style="flex: 1; justify-content: center; background: #e0f2fe; color: #0284c7; border-color: #bae6fd; font-size: 13px;" onclick="openCurrentServiceEditor()">✏️ Edit Fields</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REORDER BUTTONS MODAL -->
+  <div class="modal-overlay" id="orderModal" onclick="closeOrderModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-drag-bar"></div>
+      
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-title">🔄 Change Button Order</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Move buttons up or down to set your preferred order</div>
+        </div>
+        <button class="icon-btn" onclick="resetButtonOrder()" style="color: var(--danger);">Reset Order</button>
+      </div>
+
+      <div class="reorder-list" id="reorderList">
+        <!-- Injected dynamically -->
+      </div>
+
+      <button class="close-modal-btn" onclick="closeOrderModal()">Save & Apply Order</button>
+    </div>
+  </div>
+
+  <!-- EDIT MANDATORY FIELDS MODAL -->
+  <div class="modal-overlay" id="editorModal" onclick="closeEditorModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-drag-bar"></div>
+      
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-title">✏️ Edit Mandatory Fields</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Customize mandatory fields for any service</div>
+        </div>
+        <button class="icon-btn" onclick="resetFieldsToDefault()" style="color: var(--danger);">Default UIDAI</button>
+      </div>
+
+      <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Select Service to Edit:</label>
+      <select id="editServiceSelect" class="editor-input" onchange="loadServiceEditor()">
+        <!-- Populated via JS -->
+      </select>
+
+      <div id="fieldsEditorContainer">
+        <!-- Injected fields for editing -->
+      </div>
+
+      <button class="btn-action" onclick="addNewFieldRow()" style="width: 100%; margin: 8px 0; justify-content: center; background: #e0f2fe; color: #0284c7; border-color: #bae6fd;">
+        ➕ Add Extra Mandatory Field
+      </button>
+
+      <button class="close-modal-btn" onclick="saveCustomFields()">Save Field Changes</button>
+    </div>
+  </div>
+
+  <!-- DATABASE HISTORY MODAL (DAY-BY-DAY AUDIT & RECORDS) -->
+  <div class="modal-overlay" id="historyModal" onclick="closeHistoryModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-drag-bar"></div>
+      
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-title">📜 Operational History Database</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Day-by-day tallies, operator audits & logs</div>
+        </div>
+        <button class="icon-btn" onclick="exportHistoryCSV()" style="color: var(--primary);">📥 Export CSV</button>
+      </div>
+
+      <!-- DATE SELECTOR DROPDOWN -->
+      <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">📅 Select History Date:</label>
+      <select id="historyDateSelect" class="history-date-select" onchange="renderSelectedDateHistory()">
+        <!-- Populated dynamically with all dates from DB -->
+      </select>
+
+      <!-- HISTORY TABS -->
+      <div class="history-tabs">
+        <button class="history-tab-btn active" id="tabBtnSummary" onclick="switchHistoryTab('summary')">📊 Day Breakdown</button>
+        <button class="history-tab-btn" id="tabBtnAudit" onclick="switchHistoryTab('audit')">🕒 Live Audit Log</button>
+      </div>
+
+      <!-- TAB 1: DAY BREAKDOWN VIEW -->
+      <div id="historyViewSummary">
+        <div class="history-summary-banner">
+          <div>
+            <div style="font-size: 11px; opacity: 0.9;" id="histDateTitle">Selected Date</div>
+            <div style="font-size: 18px; font-weight: 800;" id="histTotalNumber">0 Completed</div>
+          </div>
+          <span style="font-size: 24px;">🏛️</span>
+        </div>
+
+        <!-- 3 AGE CATEGORY STAT PILLS -->
+        <div class="history-stat-pills">
+          <div class="history-stat-pill">
+            <div class="h-val" id="histUnder5Count">0</div>
+            <div class="h-lbl">👶 Under 5 Yrs</div>
+          </div>
+          <div class="history-stat-pill">
+            <div class="h-val" id="hist5to18Count">0</div>
+            <div class="h-lbl">🧒 5-18 Yrs</div>
+          </div>
+          <div class="history-stat-pill">
+            <div class="h-val" id="histAbove18Count">0</div>
+            <div class="h-lbl">🧑 18+ Adults</div>
+          </div>
+        </div>
+
+        <div style="font-size: 12px; font-weight: 700; color: #1e3a8a; margin: 10px 0 6px 0;">⚡ Service-wise Breakdown:</div>
+        <div id="historyServiceList" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; margin-bottom:12px;">
+          <!-- Injected via JS -->
+        </div>
+
+        <div style="font-size: 12px; font-weight: 700; color: #1e3a8a; margin: 10px 0 6px 0;">👤 Operator Desks on this Date:</div>
+        <div id="historySeatsList" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:8px; font-size:11.5px; max-height:120px; overflow-y:auto; margin-bottom:12px;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- TAB 2: AUDIT LOG STREAM -->
+      <div id="historyViewAudit" style="display: none;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Real-time timestamps of recorded actions on this date:</div>
+        <div id="historyAuditList" style="max-height: 320px; overflow-y: auto;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- FOOTER ACTIONS -->
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="close-modal-btn" style="flex: 2; margin-top: 0;" onclick="closeHistoryModal()">Close History</button>
+        <button class="btn-action danger" style="flex: 1; justify-content: center; font-size: 11.5px;" onclick="clearHistoryPrompt()">🗑️ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK OPERATOR ROSTER MODAL (WHATSAPP PASTE) -->
+  <div class="modal-overlay" id="rosterModal" onclick="closeRosterModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-drag-bar"></div>
+      
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-title">📋 Bulk Paste Operator Roster</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Paste duty list to assign all 18 counter seats in 1-click</div>
+        </div>
+        <button class="icon-btn" onclick="clearAllSeatsPrompt()" style="color: var(--danger);">Clear Seats</button>
+      </div>
+
+      <div class="blank-tip" style="margin-top: 0; margin-bottom: 10px; text-align: left; font-size: 11px;">
+        💡 <b>Accepted WhatsApp formats:</b><br>
+        • Numbered: <code>1. Rahul Sharma</code>, <code>2. Pooja Verma</code><br>
+        • Line-by-line: <code>Rahul Sharma</code><br>
+        • Comma-separated: <code>Rahul, Pooja, Amit, Vikram...</code>
+      </div>
+
+      <label style="font-size: 11.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Paste WhatsApp Message:</label>
+      <textarea id="rosterTextInput" class="editor-input" style="height: 120px; font-family: monospace; font-size: 12px; line-height: 1.4; resize: vertical;" placeholder="Paste WhatsApp roster here...&#10;1. Rahul Sharma&#10;2. Pooja Verma&#10;3. Amit Kumar"></textarea>
+
+      <div style="font-size: 10.5px; color: var(--text-muted); margin-bottom: 12px;">
+        ⚡ <b>Note:</b> Assigned for today only. The app automatically refreshes seats next day.
+      </div>
+
+      <button class="close-modal-btn" style="margin-top: 0;" onclick="applyBulkRoster()">⚡ Apply to 18 Counter Seats</button>
+      <button class="btn-action" style="width: 100%; margin-top: 8px; justify-content: center;" onclick="closeRosterModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ADD ADVANCE SERVICE CARD MODAL -->
+  <div class="modal-overlay" id="addCardModal" onclick="closeAddCardModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-drag-bar"></div>
+      
+      <div class="modal-header-row">
+        <div>
+          <div class="modal-title">➕ Add Advance Service Card</div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">Create advance variations inheriting base mandatory fields + extra fields</div>
+        </div>
+        <button class="icon-btn" onclick="closeAddCardModal()" style="font-size: 16px; color: #64748b; padding: 2px 6px;">✕</button>
+      </div>
+
+      <!-- Quick Preset Template Buttons -->
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 5px;">⚡ Quick Presets / Templates:</label>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="icon-btn" onclick="applyAdvanceTemplate('advance_name')" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 700;">
+            ⚡ Advance Name (Gazette / Limit)
+          </button>
+          <button type="button" class="icon-btn" onclick="applyAdvanceTemplate('advance_dob')" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 700;">
+            ⚡ Advance DOB (Exception)
+          </button>
+          <button type="button" class="icon-btn" onclick="applyAdvanceTemplate('custom_blank')" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 600;">
+            ⚡ Blank Custom
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. Card Title Input -->
+      <div style="margin-bottom: 10px;">
+        <label style="font-size: 11.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Card Display Title (Appears on Main Screen):</label>
+        <input type="text" id="advCardTitleInput" class="editor-input" placeholder="e.g. Advance Name, Gazette Name, etc." style="margin-bottom: 0;">
+      </div>
+
+      <!-- 2. Select Base Service to Inherit -->
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 11.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 3px;">Base Service to Clone & Inherit Mandatory Fields:</label>
+        <select id="advBaseServiceSelect" class="editor-input" style="margin-bottom: 0;" onchange="renderInheritedBasePreview()">
+          <option value="name">Name (Inherit 7 UIDAI mandatory fields)</option>
+          <option value="dob">date of birth (Inherit 8 UIDAI mandatory fields)</option>
+          <option value="bio">bio update (Inherit 5 UIDAI mandatory fields)</option>
+          <option value="mobile">mobile (Inherit 6 UIDAI mandatory fields)</option>
+          <option value="address">Address (Inherit 9 UIDAI mandatory fields)</option>
+          <option value="gender">gander (Inherit 6 UIDAI mandatory fields)</option>
+          <option value="email">Email (Inherit 6 UIDAI mandatory fields)</option>
+          <option value="docupdate">Update of POI and POA documents</option>
+          <option value="none">None (Custom Only)</option>
+        </select>
+      </div>
+
+      <!-- Inherited Fields Preview Box -->
+      <div style="margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 11px; font-weight: 700; color: #1e3a8a;">🔒 Inherited Base Mandatory Fields (<span id="inheritedCountBadge">7</span> fields):</span>
+          <span style="font-size: 10px; color: #16a34a; font-weight: 700;">✓ Automatically Included</span>
+        </div>
+        <div id="inheritedPreviewList" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #64748b; max-height: 90px; overflow-y: auto;">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Extra Advance Fields Section -->
+      <div style="margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label style="font-size: 11.5px; font-weight: 700; color: #1e3a8a;">➕ Extra Mandatory Fields for this Advance Card:</label>
+          <button type="button" onclick="addAdvanceFieldRow()" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; border-radius: 4px; padding: 3px 9px; font-size: 10.5px; font-weight: 700; cursor: pointer;">
+            + Add Field
+          </button>
+        </div>
+        <div id="advanceExtraFieldsContainer">
+          <!-- Dynamic extra fields rows -->
+        </div>
+      </div>
+
+      <!-- Save & Action Buttons -->
+      <div style="display: flex; gap: 8px; margin-top: 10px;">
+        <button class="close-modal-btn" style="flex: 2; margin-top: 0; background: var(--primary);" onclick="saveAndAddAdvanceCard()">
+          ⚡ Save & Add to Main Screen
+        </button>
+        <button class="btn-action" style="flex: 1; justify-content: center;" onclick="closeAddCardModal()">Cancel</button>
+      </div>
+
+      <!-- Active Custom Cards List with Delete option -->
+      <div id="existingCustomCardsSection" style="margin-top: 16px; border-top: 1px dashed #cbd5e1; padding-top: 10px;">
+        <div style="font-size: 11.5px; font-weight: 700; color: #475569; margin-bottom: 6px;">Active Custom Cards on Screen:</div>
+        <div id="existingCustomCardsList">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let currentAge = 'above18';
+    let lastRecorded = null;
+    let toastTimeout = null;
+
+    // Service Master Info (Titles as requested in user sketch)
+    const serviceMeta = {
+      bio: { title: "bio update", short: "bio" },
+      mobile: { title: "mobile", short: "mobile" },
+      name: { title: "Name", short: "Name" },
+      dob: { title: "date of birth", short: "dob" },
+      gender: { title: "gander", short: "gender" },
+      address: { title: "Address", short: "Address" },
+      email: { title: "Email", short: "Email" },
+      docupdate: { title: "Update of POI and POA documents", short: "docupdate" }
+    };
+
+    // Default Button Order (Matches user's exact sketch)
+    const defaultOrder = ['bio', 'mobile', 'name', 'dob', 'gender', 'address', 'email', 'docupdate'];
+    let buttonOrder = JSON.parse(localStorage.getItem('aadhaar_custom_button_order')) || [...defaultOrder];
+
+    // Data Store Structure in localStorage
+    let store = JSON.parse(localStorage.getItem('aadhaar_pill_sketch_data_en') || JSON.stringify({
+      under5: {},
+      '5to18': {},
+      above18: {}
+    }));
+
+    // DEFAULT MANDATORY FIELDS BASED ON OFFICIAL FORM 1, FORM 3, FORM 5
+    const defaultMandatoryFields = {
+      bio: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Biometric (photo, fingerprints and irises)", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      mobile: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 3(e)", name: "Mobile Number", val: "Write 10-digit active mobile number", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Mobile", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      name: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 3(a)", name: "Name", val: "Write NEW name in BLOCK CAPITAL LETTERS (omit titles like Mr, Mrs, Shri)", req: "MANDATORY" },
+        { num: "Field 4", name: "Basis of update", val: "Tick [✔] Document verification", req: "MANDATORY" },
+        { num: "Field 5(b)(i)", name: "Proof of Identity (POI)", val: "Write Name of POI document presented (e.g. PAN Card/Voter ID)", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Name", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      dob: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 3(c)", name: "Date of Birth (DOB)", val: "Write Date of Birth in DDMMYYYY format & Tick [✔] Verified", req: "MANDATORY" },
+        { num: "Field 4", name: "Basis of update", val: "Tick [✔] Document verification", req: "MANDATORY" },
+        { num: "Field 5(b)(iii)", name: "Proof of Date of Birth (PDB)", val: "Write Name of POB document (Birth Certificate / 10th Marksheet)", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Date of Birth", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      gender: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 3(b)", name: "Gender", val: "Tick [✔] Female OR Male OR Third gender / Transgender", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Gender", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      address: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 4", name: "Basis of update", val: "Tick [✔] Document verification (OR HoF if using family head)", req: "MANDATORY" },
+        { num: "Field 5(a)", name: "Address", val: "Write House/Flat No, Street, Landmark, Village/City", req: "MANDATORY" },
+        { num: "Field 5(a)", name: "Post Office & PIN Code", val: "Write Post Office & 6-digit PIN code (both are strictly mandatory)", req: "MANDATORY" },
+        { num: "Field 5(b)(ii)", name: "Proof of Address (POA)", val: "Write Name of POA document presented (e.g., Electricity Bill, Bank Passbook)", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Address", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      email: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 3(d)", name: "Email Address", val: "Write valid Email address in clear lowercase letters", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Email", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ],
+      docupdate: [
+        { num: "Field 1", name: "Purpose", val: "Tick [✔] Update", req: "MANDATORY" },
+        { num: "Field 2", name: "Resident Status", val: "Tick [✔] Resident Indian", req: "MANDATORY" },
+        { num: "Field 4", name: "Basis of update", val: "Tick [✔] Document verification", req: "MANDATORY" },
+        { num: "Field 5(b)(i)", name: "Proof of Identity (POI)", val: "Write Name of POI document presented", req: "MANDATORY" },
+        { num: "Field 5(b)(ii)", name: "Proof of Address (POA)", val: "Write Name of POA document presented", req: "MANDATORY" },
+        { num: "Field 7(a)", name: "Aadhaar Number", val: "Write 12-digit Aadhaar number of applicant", req: "MANDATORY" },
+        { num: "Field 7(b)", name: "Information to be updated", val: "Tick [✔] Update of POI and POA documents", req: "MANDATORY" },
+        { num: "Bottom", name: "Declaration Signature", val: "Signature / Thumb Impression + Date & Time", req: "MANDATORY" }
+      ]
+    };
+
+    // Load custom fields from localStorage (or fallback to defaults)
+    let customMandatoryFields = JSON.parse(localStorage.getItem('aadhaar_custom_fields_v1')) || JSON.parse(JSON.stringify(defaultMandatoryFields));
+
+    // Custom Advance Cards (e.g. Advance Name with Gazette / Exception fields)
+    let customCardsList = JSON.parse(localStorage.getItem('aadhaar_custom_cards_v1')) || [];
+
+    function registerCustomCards() {
+      customCardsList.forEach(c => {
+        serviceMeta[c.id] = {
+          title: c.title,
+          short: c.short || c.title,
+          isCustom: true,
+          baseKey: c.baseKey
+        };
+
+        const baseFields = (c.baseKey && c.baseKey !== 'none')
+          ? (customMandatoryFields[c.baseKey] || defaultMandatoryFields[c.baseKey] || [])
+          : [];
+
+        // Combine base fields + extra fields
+        customMandatoryFields[c.id] = [
+          ...JSON.parse(JSON.stringify(baseFields)),
+          ...JSON.parse(JSON.stringify(c.extraFields || []))
+        ];
+
+        if (!buttonOrder.includes(c.id)) {
+          buttonOrder.push(c.id);
+        }
+      });
+    }
+
+    // Register any custom cards immediately
+    registerCustomCards();
+
+    // RENDER 8+ PILLS IN ORDER (INCLUDES CUSTOM ADVANCE CARDS)
+    function renderPills() {
+      const container = document.getElementById('pillsContainer');
+      container.innerHTML = '';
+
+      buttonOrder.forEach(key => {
+        const item = serviceMeta[key];
+        if (!item) return;
+
+        const card = document.createElement('div');
+        card.className = 'pill-card';
+        card.id = 'card_' + key;
+        card.onclick = () => handleCardClick(key);
+
+        const isLongTitle = item.title.length > 14;
+        card.innerHTML = `
+          <div class="pill-text-wrap">
+            <div class="pill-title" style="${isLongTitle ? 'font-size: 11px; line-height: 1.25;' : ''}">${item.title}</div>
+            <span class="pill-count-badge" id="badge_${key}">0</span>
+          </div>
+          <div class="info-circle" onclick="handleInfoClick('${key}', event)" title="Mandatory Fields Guide">i</div>
+        `;
+        container.appendChild(card);
+      });
+
+      refreshBadges();
+    }
+
+    // SELECT AGE
+    function selectAge(ageKey) {
+      currentAge = ageKey;
+      document.getElementById('btn_under5').classList.remove('active');
+      document.getElementById('btn_5to18').classList.remove('active');
+      document.getElementById('btn_above18').classList.remove('active');
+
+      document.getElementById('btn_' + ageKey).classList.add('active');
+
+      const labels = {
+        under5: "Active: 0-5 Yrs (Bal Aadhaar - Form 5)",
+        '5to18': "Active: 5-18 Yrs (Minor - Form 3)",
+        above18: "Active: 18+ Adults (Form 1)"
+      };
+      document.getElementById('categoryLabelDisplay').innerText = labels[ageKey];
+
+      playClickSound();
+      triggerHaptic();
+      refreshBadges();
+
+      const shortName = ageKey === 'under5' ? 'Form 5 (Under 5 Yrs)' : ageKey === '5to18' ? 'Form 3 (5-18 Yrs)' : 'Form 1 (18+ Adults)';
+      showToast(`Selected: ${shortName}`);
+    }
+
+    // CLICK PILL CARD (RECORD COUNT)
+    function handleCardClick(serviceKey) {
+      if (!store[currentAge]) store[currentAge] = {};
+
+      const prev = store[currentAge][serviceKey] || 0;
+      store[currentAge][serviceKey] = prev + 1;
+      localStorage.setItem('aadhaar_pill_sketch_data_en', JSON.stringify(store));
+
+      // Save to persistent database with automatic date & timestamp
+      const txId = saveTransactionToDB(currentAge, serviceKey);
+      lastRecorded = { age: currentAge, service: serviceKey, txId: txId };
+
+      const card = document.getElementById('card_' + serviceKey);
+      if (card) {
+        card.classList.remove('pulse');
+        void card.offsetWidth;
+        card.classList.add('pulse');
+      }
+
+      playClickSound();
+      triggerHaptic();
+      refreshBadges();
+
+      const sTitle = serviceMeta[serviceKey]?.title || serviceKey;
+      showToast(`✓ ${sTitle} logged! (Total: ${store[currentAge][serviceKey]})`, true);
+    }
+
+    // UNDO LAST RECORDED ACTION
+    function undoLastAction() {
+      if (!lastRecorded) return;
+      const { age, service, txId } = lastRecorded;
+      if (store[age] && store[age][service] > 0) {
+        store[age][service] -= 1;
+        localStorage.setItem('aadhaar_pill_sketch_data_en', JSON.stringify(store));
+        if (txId) {
+          undoLastTransactionFromDB(txId, age, service);
+        }
+        refreshBadges();
+        playClickSound();
+        showToast("↩ Action undone successfully!", false);
+      }
+      lastRecorded = null;
+    }
+
+    let currentOpenedService = 'bio';
+
+    // CLICK (i) CIRCLE ICON (OPENS EXACT MANDATORY FIELDS ONLY)
+    function handleInfoClick(serviceKey, e) {
+      e.stopPropagation();
+      currentOpenedService = serviceKey;
+      const meta = serviceMeta[serviceKey];
+      if (!meta) return;
+
+      const formBadge = currentAge === 'under5' ? 'FORM 5 (0-5 Yrs)' : currentAge === '5to18' ? 'FORM 3 (5-18 Yrs)' : 'FORM 1 (18+ Yrs)';
+      document.getElementById('mTitle').innerText = `${meta.title} (Mandatory Fields)`;
+      document.getElementById('mFormBadge').innerText = formBadge;
+
+      const fields = customMandatoryFields[serviceKey] || defaultMandatoryFields[serviceKey] || [];
+      let html = '';
+
+      fields.forEach(f => {
+        let valText = f.val;
+        // Adjust signature based on age category
+        if (f.name.toLowerCase().includes('declaration') || f.name.toLowerCase().includes('signature')) {
+          valText = currentAge === 'above18' 
+            ? "Applicant Signature / Thumb Impression + Date & Time"
+            : "Mother / Father / Guardian Signature + Date & Time";
+        }
+
+        const isAdvanceReq = f.req === 'ADVANCE REQ';
+
+        html += `
+          <div class="field-card" style="${isAdvanceReq ? 'border-left: 4px solid #2563eb; background: #f0f7ff;' : ''}">
+            <div class="field-header">
+              <span class="field-num" style="${isAdvanceReq ? 'color: #1e40af;' : ''}">${f.num}: ${f.name}</span>
+              <span class="badge-req" style="${isAdvanceReq ? 'background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd;' : ''}">${f.req || 'MANDATORY'}</span>
+            </div>
+            <div class="field-instruction">👉 <b>${valText}</b></div>
+          </div>
+        `;
+      });
+
+      document.getElementById('mBody').innerHTML = html;
+      document.getElementById('helpModal').style.display = 'flex';
+      
+      playClickSound();
+      triggerHaptic();
+    }
+
+    function openCurrentServiceEditor() {
+      closeModal();
+      openFieldEditorModal();
+      const sel = document.getElementById('editServiceSelect');
+      if (sel) {
+        sel.value = currentOpenedService;
+        loadServiceEditor();
+      }
+    }
+
+    function closeModal(e) {
+      document.getElementById('helpModal').style.display = 'none';
+      playClickSound();
+    }
+
+    // REFRESH BADGES
+    function refreshBadges() {
+      const activeAgeCounts = store[currentAge] || {};
+      buttonOrder.forEach(k => {
+        const count = activeAgeCounts[k] || 0;
+        const badge = document.getElementById('badge_' + k);
+        if (badge) {
+          badge.innerText = count;
+          if (count > 0) {
+            badge.classList.add('has-count');
+          } else {
+            badge.classList.remove('has-count');
+          }
+        }
+      });
+
+      let grandTotal = 0;
+      ['under5', '5to18', 'above18'].forEach(cat => {
+        let catSum = 0;
+        const obj = store[cat] || {};
+        for (let s in obj) catSum += obj[s];
+        const sub = document.getElementById('sub_' + cat);
+        if (sub) sub.innerText = `${catSum} Completed`;
+        grandTotal += catSum;
+      });
+
+      document.getElementById('grandTotalText').innerText = `Total: ${grandTotal} Completed`;
+    }
+
+    // TOAST
+    function showToast(msg, showUndo = false) {
+      const t = document.getElementById('toastBox');
+      document.getElementById('toastMsg').innerText = msg;
+      
+      const undoBtn = t.querySelector('.toast-undo-btn');
+      if (undoBtn) {
+        undoBtn.style.display = showUndo ? 'inline-block' : 'none';
+      }
+
+      t.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        t.classList.remove('show');
+      }, 2600);
+    }
+
+    // AUDIO & HAPTIC
+    function playClickSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(480, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+      } catch (e) {}
+    }
+
+    function triggerHaptic() {
+      if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    // EXPORT CSV
+    function exportDataCSV() {
+      let csv = "Age Category,Service Name,Today Count\n";
+      let hasData = false;
+
+      const ageLabels = {
+        under5: "Under 5 Years (Bal Aadhaar - Form 5)",
+        '5to18': "5 to 18 Years (Minor - Form 3)",
+        above18: "18 and Above (Adults - Form 1)"
+      };
+
+      ['under5', '5to18', 'above18'].forEach(cat => {
+        const obj = store[cat] || {};
+        buttonOrder.forEach(sKey => {
+          if (obj[sKey] > 0) {
+            hasData = true;
+            csv += `"${ageLabels[cat]}","${serviceMeta[sKey]?.title || sKey}",${obj[sKey]}\n`;
+          }
+        });
+      });
+
+      // Add Operator Counter Desks roster to CSV
+      csv += "\n--- OPERATOR COUNTER SEATS (1-18) ---\n";
+      csv += "Seat Number,Operator Name,Desk Status\n";
+      for (let i = 1; i <= 18; i++) {
+        const s = seatMap[i] || { name: '', status: 'open' };
+        const sPad = i < 10 ? '0' + i : i;
+        const sStatus = s.status === 'closed' ? 'Closed' : 'Active';
+        csv += `"Seat #${sPad}","${(s.name || '').replace(/"/g, '""')}","${sStatus}"\n`;
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Aadhaar_Daily_Summary_${new Date().toISOString().slice(0,10)}.csv`);
+      a.click();
+    }
+
+    // RESET
+    function resetAllCounts() {
+      if (confirm("Are you sure you want to reset all counts for today?")) {
+        store = { under5: {}, '5to18': {}, above18: {} };
+        localStorage.removeItem('aadhaar_pill_sketch_data_en');
+        refreshBadges();
+        showToast("All counts cleared for a new day!", false);
+      }
+    }
+
+    function showSummaryAlert() {
+      let summary = "📋 TODAY'S SUMMARY:\n\n";
+      ['under5', '5to18', 'above18'].forEach(cat => {
+        const catLabel = cat === 'under5' ? '👶 Under 5 Yrs' : cat === '5to18' ? '🧒 5-18 Yrs' : '🧑 18+ Adults';
+        summary += `${catLabel}:\n`;
+        const obj = store[cat] || {};
+        let count = 0;
+        buttonOrder.forEach(sKey => {
+          if (obj[sKey] > 0) {
+            summary += `  • ${serviceMeta[sKey]?.title}: ${obj[sKey]}\n`;
+            count += obj[sKey];
+          }
+        });
+        if (count === 0) summary += "  (No entries yet)\n";
+        summary += "\n";
+      });
+      alert(summary);
+    }
+
+    // ---------------- REORDER BUTTONS FEATURE ----------------
+    function openOrderModal() {
+      const list = document.getElementById('reorderList');
+      list.innerHTML = '';
+
+      buttonOrder.forEach((key, idx) => {
+        const item = serviceMeta[key];
+        const row = document.createElement('div');
+        row.className = 'reorder-item';
+        row.innerHTML = `
+          <span>${idx + 1}. ${item.title}</span>
+          <div class="reorder-btns">
+            <button class="reorder-btn" onclick="moveButtonOrder(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity:0.3;"' : ''}>▲</button>
+            <button class="reorder-btn" onclick="moveButtonOrder(${idx}, 1)" ${idx === buttonOrder.length - 1 ? 'disabled style="opacity:0.3;"' : ''}>▼</button>
+          </div>
+        `;
+        list.appendChild(row);
+      });
+
+      document.getElementById('orderModal').style.display = 'flex';
+    }
+
+    function moveButtonOrder(fromIdx, dir) {
+      const toIdx = fromIdx + dir;
+      if (toIdx < 0 || toIdx >= buttonOrder.length) return;
+      const temp = buttonOrder[fromIdx];
+      buttonOrder[fromIdx] = buttonOrder[toIdx];
+      buttonOrder[toIdx] = temp;
+      openOrderModal(); // re-render list
+    }
+
+    function closeOrderModal(e) {
+      localStorage.setItem('aadhaar_custom_button_order', JSON.stringify(buttonOrder));
+      document.getElementById('orderModal').style.display = 'none';
+      renderPills();
+      showToast("✓ Button order saved & applied!");
+    }
+
+    function resetButtonOrder() {
+      if (confirm("Reset button order to original sketch layout?")) {
+        buttonOrder = [...defaultOrder, ...customCardsList.map(c => c.id)];
+        localStorage.removeItem('aadhaar_custom_button_order');
+        openOrderModal();
+        renderPills();
+      }
+    }
+
+    // ---------------- EDIT MANDATORY FIELDS FEATURE ----------------
+    function openFieldEditorModal() {
+      const select = document.getElementById('editServiceSelect');
+      select.innerHTML = '';
+      buttonOrder.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = serviceMeta[key]?.title || key;
+        select.appendChild(opt);
+      });
+
+      loadServiceEditor();
+      document.getElementById('editorModal').style.display = 'flex';
+    }
+
+    function loadServiceEditor() {
+      const sKey = document.getElementById('editServiceSelect').value;
+      const container = document.getElementById('fieldsEditorContainer');
+      const fields = customMandatoryFields[sKey] || [];
+
+      container.innerHTML = '';
+      fields.forEach((f, idx) => {
+        const row = document.createElement('div');
+        row.style.background = '#f8fafc';
+        row.style.border = '1px solid #e2e8f0';
+        row.style.padding = '10px';
+        row.style.borderRadius = '8px';
+        row.style.marginBottom = '10px';
+        row.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <b style="font-size:12px; color:#1e3a8a;">Field #${idx + 1}</b>
+            <button onclick="removeFieldRow('${sKey}', ${idx})" style="background:none; border:none; color:#dc2626; cursor:pointer; font-size:12px; font-weight:bold;">🗑️ Delete</button>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+            <div>
+              <label style="font-size:11px; color:#64748b;">Box / Field No:</label>
+              <input type="text" class="editor-input" value="${f.num}" onchange="updateFieldVal('${sKey}', ${idx}, 'num', this.value)">
+            </div>
+            <div>
+              <label style="font-size:11px; color:#64748b;">Field Name:</label>
+              <input type="text" class="editor-input" value="${f.name}" onchange="updateFieldVal('${sKey}', ${idx}, 'name', this.value)">
+            </div>
+          </div>
+          <div>
+            <label style="font-size:11px; color:#64748b;">What to Fill / Instruction:</label>
+            <input type="text" class="editor-input" value="${f.val}" onchange="updateFieldVal('${sKey}', ${idx}, 'val', this.value)">
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateFieldVal(sKey, idx, prop, val) {
+      if (customMandatoryFields[sKey] && customMandatoryFields[sKey][idx]) {
+        customMandatoryFields[sKey][idx][prop] = val;
+      }
+    }
+
+    function addNewFieldRow() {
+      const sKey = document.getElementById('editServiceSelect').value;
+      if (!customMandatoryFields[sKey]) customMandatoryFields[sKey] = [];
+      customMandatoryFields[sKey].push({
+        num: "Field X",
+        name: "New Field Name",
+        val: "Write instruction here",
+        req: "MANDATORY"
+      });
+      loadServiceEditor();
+    }
+
+    function removeFieldRow(sKey, idx) {
+      if (confirm("Delete this mandatory field?")) {
+        customMandatoryFields[sKey].splice(idx, 1);
+        loadServiceEditor();
+      }
+    }
+
+    function saveCustomFields() {
+      localStorage.setItem('aadhaar_custom_fields_v1', JSON.stringify(customMandatoryFields));
+      document.getElementById('editorModal').style.display = 'none';
+      showToast("✓ Mandatory fields updated & saved!");
+    }
+
+    function resetFieldsToDefault() {
+      if (confirm("Reset all fields back to official UIDAI default forms?")) {
+        customMandatoryFields = JSON.parse(JSON.stringify(defaultMandatoryFields));
+        localStorage.removeItem('aadhaar_custom_fields_v1');
+        loadServiceEditor();
+        showToast("Restored to official UIDAI defaults!");
+      }
+    }
+
+    function closeEditorModal(e) {
+      document.getElementById('editorModal').style.display = 'none';
+    }
+
+    // KEYBOARD SHORTCUTS FOR PC OPERATORS
+    window.addEventListener('keydown', function(e) {
+      // Don't trigger if typing in an input or select box
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+
+      const key = e.key.toLowerCase();
+
+      // Number keys 1-9 and 0 for services in current button order (including Advance Cards)
+      if (key >= '1' && key <= '9') {
+        const index = parseInt(key) - 1;
+        if (index < buttonOrder.length) {
+          handleCardClick(buttonOrder[index]);
+        }
+      } else if (key === '0') {
+        if (buttonOrder.length >= 10) {
+          handleCardClick(buttonOrder[9]);
+        }
+      } 
+      // 'u' for Undo
+      else if (key === 'u') {
+        undoLastAction();
+      }
+      // 'q' for Under 5, 'w' for 5-18, 'e' for 18+
+      else if (key === 'q') {
+        selectAge('under5');
+      } else if (key === 'w') {
+        selectAge('5to18');
+      } else if (key === 'e') {
+        selectAge('above18');
+      }
+    });
+
+    // ADVANCE DROPDOWN, COUNTER SET & SEAT OPERATOR FUNCTIONS
+    function toggleAdvanceDropdown() {
+      const body = document.getElementById('advBody');
+      const chevron = document.getElementById('advChevron');
+      body.classList.toggle('open');
+      if (body.classList.contains('open')) {
+        chevron.style.transform = 'rotate(180deg)';
+      } else {
+        chevron.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    function openCounterSetPrompt() {
+      const activeAgeCounts = store[currentAge] || {};
+      let curSum = 0;
+      for (let k in activeAgeCounts) curSum += activeAgeCounts[k];
+
+      const input = prompt(`[Counter Calibration]\nCurrent category has ${curSum} entries.\nEnter custom total or starting count to adjust:`, curSum);
+      if (input !== null && !isNaN(parseInt(input))) {
+        const newCount = parseInt(input);
+        // Calibrate by distributing or setting first service
+        if (buttonOrder.length > 0) {
+          const firstKey = buttonOrder[0];
+          store[currentAge] = { [firstKey]: newCount };
+          localStorage.setItem('aadhaar_pill_sketch_data_en', JSON.stringify(store));
+          refreshBadges();
+          showToast(`✓ Counter calibrated to: ${newCount}`);
+        }
+      }
+    }
+
+    // ---------------- 18 MOVIE / CINEMA SEATS LOGIC ----------------
+    let selectedSeatNumber = 1;
+    let rawSeatData = JSON.parse(localStorage.getItem('aadhaar_18_seats_v2')) || {};
+    
+    // Normalize or initialize 18 seats (all default to GREEN / OPEN)
+    let seatMap = {};
+    for (let i = 1; i <= 18; i++) {
+      if (rawSeatData[i]) {
+        seatMap[i] = typeof rawSeatData[i] === 'string' 
+          ? { name: rawSeatData[i], status: 'open' }
+          : rawSeatData[i];
+      } else {
+        seatMap[i] = { name: (i === 1 ? "Operator Desk #1" : ""), status: "open" };
+      }
+    }
+
+    function render18Seats() {
+      const grid = document.getElementById('seatsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      for (let i = 1; i <= 18; i++) {
+        const seatObj = seatMap[i] || { name: '', status: 'open' };
+        const seat = document.createElement('div');
+        seat.className = 'cinema-seat';
+
+        const isClosed = seatObj.status === 'closed';
+        if (isClosed) {
+          seat.classList.add('seat-closed');
+        } else {
+          seat.classList.add('seat-open');
+        }
+
+        if (i === selectedSeatNumber) {
+          seat.classList.add('selected');
+        }
+
+        const seatPad = i < 10 ? '0' + i : i;
+        const opName = (seatObj.name || '').trim();
+        const statusText = isClosed ? "🔴 Closed" : "🟢 Active";
+
+        seat.innerHTML = `
+          <div class="seat-num">${seatPad}</div>
+          <div class="seat-name-text">${opName || (isClosed ? 'CLOSED' : '')}</div>
+          <div class="seat-tooltip">
+            Seat #${seatPad}: ${opName || 'Available'}<br>
+            <span style="font-size:10px; opacity:0.85;">${statusText}</span>
+          </div>
+        `;
+        // Single click selects seat to view/edit operator name
+        seat.onclick = () => selectSeat(i);
+        // Double click toggles between Active and Closed
+        seat.ondblclick = (e) => {
+          e.stopPropagation();
+          toggleSeatDirect(i);
+        };
+        // Touchscreen double-tap support for mobile phones
+        let lastTouchTime = 0;
+        seat.addEventListener('touchend', (e) => {
+          const now = Date.now();
+          if (now - lastTouchTime < 340 && now - lastTouchTime > 40) {
+            e.preventDefault();
+            toggleSeatDirect(i);
+          }
+          lastTouchTime = now;
+        });
+        grid.appendChild(seat);
+      }
+
+      updateSeatFormDisplay();
+    }
+
+    function selectSeat(seatNum) {
+      selectedSeatNumber = seatNum;
+      // Update selected visual state directly so DOM nodes remain intact for double-click
+      const allSeats = document.querySelectorAll('.cinema-seat');
+      allSeats.forEach((el, idx) => {
+        if (idx + 1 === seatNum) {
+          el.classList.add('selected');
+        } else {
+          el.classList.remove('selected');
+        }
+      });
+      updateSeatFormDisplay();
+      playClickSound();
+      triggerHaptic();
+    }
+
+    // Direct toggle on double click (Closed / Active)
+    function toggleSeatDirect(seatNum) {
+      if (!seatMap[seatNum]) seatMap[seatNum] = { name: '', status: 'open' };
+      const cur = seatMap[seatNum].status;
+      const next = cur === 'closed' ? 'open' : 'closed';
+      seatMap[seatNum].status = next;
+      selectedSeatNumber = seatNum;
+      localStorage.setItem('aadhaar_18_seats_v2', JSON.stringify(seatMap));
+      render18Seats();
+      playClickSound();
+      triggerHaptic();
+      syncTodayDataToFirebase();
+      const pad = seatNum < 10 ? '0' + seatNum : seatNum;
+      if (next === 'closed') {
+        showToast(`🔴 Seat #${pad} marked as Closed`);
+      } else {
+        showToast(`🟢 Seat #${pad} marked as Active`);
+      }
+    }
+
+    function updateSeatFormDisplay() {
+      const seatPad = selectedSeatNumber < 10 ? '0' + selectedSeatNumber : selectedSeatNumber;
+      const label = document.getElementById('activeSeatLabel');
+      const header = document.getElementById('seatEditHeader');
+      const input = document.getElementById('seatOperatorInput');
+      const statusBtn = document.getElementById('seatStatusBtn');
+
+      if (label) label.innerText = `Seat #${seatPad} Selected`;
+      if (header) header.innerText = `👤 Seat #${seatPad} Operator:`;
+
+      const seatObj = seatMap[selectedSeatNumber] || { name: '', status: 'open' };
+      if (input) input.value = seatObj.name || '';
+
+      if (statusBtn) {
+        if (seatObj.status === 'closed') {
+          statusBtn.innerHTML = '🔴 Closed';
+          statusBtn.style.color = '#b91c1c';
+          statusBtn.style.borderColor = '#fca5a5';
+          statusBtn.style.background = '#fef2f2';
+        } else {
+          statusBtn.innerHTML = '🟢 Active';
+          statusBtn.style.color = '#15803d';
+          statusBtn.style.borderColor = '#86efac';
+          statusBtn.style.background = '#f0fdf4';
+        }
+      }
+
+      // Update live counter badge (e.g. 17 Active | 1 Closed)
+      let openCount = 0;
+      let closedCount = 0;
+      for (let s = 1; s <= 18; s++) {
+        if (seatMap[s] && seatMap[s].status === 'closed') {
+          closedCount++;
+        } else {
+          openCount++;
+        }
+      }
+      const sumBadge = document.getElementById('counterSummaryBadge');
+      if (sumBadge) {
+        sumBadge.innerText = `${openCount} Active | ${closedCount} Closed`;
+      }
+    }
+
+    function toggleCurrentSeatStatus() {
+      if (!seatMap[selectedSeatNumber]) seatMap[selectedSeatNumber] = { name: '', status: 'open' };
+      const cur = seatMap[selectedSeatNumber].status;
+      const next = cur === 'closed' ? 'open' : 'closed';
+      seatMap[selectedSeatNumber].status = next;
+      localStorage.setItem('aadhaar_18_seats_v2', JSON.stringify(seatMap));
+      render18Seats();
+      playClickSound();
+      triggerHaptic();
+      syncTodayDataToFirebase();
+      const pad = selectedSeatNumber < 10 ? '0' + selectedSeatNumber : selectedSeatNumber;
+      if (next === 'closed') {
+        showToast(`🔴 Seat #${pad} set to Closed`);
+      } else {
+        showToast(`🟢 Seat #${pad} set to Active`);
+      }
+    }
+
+    function saveCurrentSeatName() {
+      const input = document.getElementById('seatOperatorInput');
+      const name = input ? input.value.trim() : '';
+      const seatPad = selectedSeatNumber < 10 ? '0' + selectedSeatNumber : selectedSeatNumber;
+
+      if (!seatMap[selectedSeatNumber]) seatMap[selectedSeatNumber] = { name: '', status: 'open' };
+      seatMap[selectedSeatNumber].name = name;
+
+      localStorage.setItem('aadhaar_18_seats_v2', JSON.stringify(seatMap));
+      render18Seats();
+      playClickSound();
+      triggerHaptic();
+
+      if (name) {
+        showToast(`✓ Seat #${seatPad} assigned to ${name}!`);
+      } else {
+        showToast(`Seat #${seatPad} name cleared`);
+      }
+    }
+
+    // ---------------- LOCAL DATABASE & HISTORY SYSTEM ----------------
+    function getTodayDateKey() {
+      const d = new Date();
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getFormattedDate(dateKey) {
+      if (!dateKey) return "Unknown Date";
+      try {
+        const parts = dateKey.split('-');
+        if (parts.length === 3) {
+          const d = new Date(parts[0], parts[1] - 1, parts[2]);
+          return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+      } catch (e) {}
+      return dateKey;
+    }
+
+    function updateLiveClock() {
+      const d = new Date();
+      const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      const dateEl = document.getElementById('currentDateDisplay');
+      if (dateEl) {
+        dateEl.innerHTML = `<span>📅 ${dateStr}</span> <span style="opacity:0.8; margin-left:4px;">🕒 ${timeStr}</span>`;
+      }
+    }
+
+    function initDatabase() {
+      const todayKey = getTodayDateKey();
+      const lastActive = localStorage.getItem('aadhaar_db_last_active_date');
+
+      // Auto-archive previous day if date has changed
+      if (lastActive && lastActive !== todayKey) {
+        let dailyDB = JSON.parse(localStorage.getItem('aadhaar_db_daily_history') || '{}');
+        if (!dailyDB[lastActive]) {
+          let yesterdaySum = 0;
+          ['under5', '5to18', 'above18'].forEach(c => {
+            const catObj = store[c] || {};
+            for (let s in catObj) yesterdaySum += catObj[s];
+          });
+          if (yesterdaySum > 0) {
+            dailyDB[lastActive] = {
+              date: lastActive,
+              dateStr: getFormattedDate(lastActive),
+              totalCount: yesterdaySum,
+              categories: JSON.parse(JSON.stringify(store)),
+              seatsSnapshot: JSON.parse(JSON.stringify(seatMap)),
+              lastUpdated: "End of Day"
+            };
+            localStorage.setItem('aadhaar_db_daily_history', JSON.stringify(dailyDB));
+          }
+        }
+        // Start clean store for the new day
+        store = { under5: {}, '5to18': {}, above18: {} };
+        localStorage.setItem('aadhaar_pill_sketch_data_en', JSON.stringify(store));
+      }
+
+      // Check if WhatsApp seats roster was set on a previous day and needs automatic refresh
+      const rosterDate = localStorage.getItem('aadhaar_seats_roster_date');
+      if (rosterDate && rosterDate !== todayKey) {
+        for (let i = 1; i <= 18; i++) {
+          seatMap[i] = { name: '', status: 'open' };
+        }
+        localStorage.setItem('aadhaar_18_seats_v2', JSON.stringify(seatMap));
+        localStorage.setItem('aadhaar_seats_roster_date', todayKey);
+      }
+
+      localStorage.setItem('aadhaar_db_last_active_date', todayKey);
+      updateLiveClock();
+      setInterval(updateLiveClock, 30000);
+
+      // Initialize Firebase Cloud sync if configured
+      initFirebase();
+    }
+
+    function saveTransactionToDB(ageKey, serviceKey) {
+      const d = new Date();
+      const dateKey = getTodayDateKey();
+      const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+      const ageLabels = {
+        under5: "Under 5 Yrs (Form 5)",
+        '5to18': "5 to 18 Yrs (Form 3)",
+        above18: "18+ Adults (Form 1)"
+      };
+
+      const txId = 'tx_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      const opName = (seatMap[selectedSeatNumber]?.name || '').trim();
+      const seatPad = selectedSeatNumber < 10 ? '0' + selectedSeatNumber : selectedSeatNumber;
+
+      const tx = {
+        id: txId,
+        timestamp: Date.now(),
+        date: dateKey,
+        dateStr: dateStr,
+        time: timeStr,
+        age: ageKey,
+        ageLabel: ageLabels[ageKey] || ageKey,
+        service: serviceKey,
+        serviceTitle: serviceMeta[serviceKey]?.title || serviceKey,
+        seatNum: selectedSeatNumber,
+        operator: opName || `Desk #${seatPad}`
+      };
+
+      // 1. Append to Transaction Audit Logs
+      let txLogs = JSON.parse(localStorage.getItem('aadhaar_db_transactions') || '[]');
+      txLogs.unshift(tx);
+      if (txLogs.length > 800) txLogs = txLogs.slice(0, 800);
+      localStorage.setItem('aadhaar_db_transactions', JSON.stringify(txLogs));
+
+      // 2. Update Daily Aggregated Database
+      let dailyDB = JSON.parse(localStorage.getItem('aadhaar_db_daily_history') || '{}');
+      if (!dailyDB[dateKey]) {
+        dailyDB[dateKey] = {
+          date: dateKey,
+          dateStr: dateStr,
+          totalCount: 0,
+          categories: { under5: {}, '5to18': {}, above18: {} },
+          seatsSnapshot: JSON.parse(JSON.stringify(seatMap)),
+          firstEntryTime: timeStr,
+          lastUpdated: timeStr
+        };
+      }
+
+      dailyDB[dateKey].totalCount = (dailyDB[dateKey].totalCount || 0) + 1;
+      if (!dailyDB[dateKey].categories[ageKey]) dailyDB[dateKey].categories[ageKey] = {};
+      dailyDB[dateKey].categories[ageKey][serviceKey] = (dailyDB[dateKey].categories[ageKey][serviceKey] || 0) + 1;
+      dailyDB[dateKey].seatsSnapshot = JSON.parse(JSON.stringify(seatMap));
+      dailyDB[dateKey].lastUpdated = timeStr;
+
+      localStorage.setItem('aadhaar_db_daily_history', JSON.stringify(dailyDB));
+
+      // 3. Asynchronously sync to Firebase Cloud if connected
+      syncTransactionToFirebase(tx);
+
+      return txId;
+    }
+
+    function undoLastTransactionFromDB(txId, ageKey, serviceKey) {
+      const dateKey = getTodayDateKey();
+
+      // Remove from transaction log
+      let txLogs = JSON.parse(localStorage.getItem('aadhaar_db_transactions') || '[]');
+      txLogs = txLogs.filter(t => t.id !== txId);
+      localStorage.setItem('aadhaar_db_transactions', JSON.stringify(txLogs));
+
+      // Decrement from daily archive
+      let dailyDB = JSON.parse(localStorage.getItem('aadhaar_db_daily_history') || '{}');
+      if (dailyDB[dateKey] && dailyDB[dateKey].totalCount > 0) {
+        dailyDB[dateKey].totalCount -= 1;
+        if (dailyDB[dateKey].categories[ageKey] && dailyDB[dateKey].categories[ageKey][serviceKey] > 0) {
+          dailyDB[dateKey].categories[ageKey][serviceKey] -= 1;
+        }
+        localStorage.setItem('aadhaar_db_daily_history', JSON.stringify(dailyDB));
+      }
+    }
+
+    let activeHistoryTab = 'summary';
+
+    function openHistoryModal() {
+      // Sync today's current counts to daily history before viewing
+      const todayKey = getTodayDateKey();
+      let dailyDB = JSON.parse(localStorage.getItem('aadhaar_db_daily_history') || '{}');
+      
+      let curSum = 0;
+      ['under5', '5to18', 'above18'].forEach(c => {
+        const catObj = store[c] || {};
+        for (let s in catObj) curSum += catObj[s];
+      });
+
+      if (!dailyDB[todayKey] || curSum > 0) {
+        dailyDB[todayKey] = {
+          date: todayKey,
+          dateStr: getFormattedDate(todayKey),
+          totalCount: curSum,
+          categories: JSON.parse(JSON.stringify(store)),
+          seatsSnapshot: JSON.parse(JSON.stringify(seatMap)),
+          lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+        };
+        localStorage.setItem('aadhaar_db_daily_history', JSON.stringify(dailyDB));
+      }
+
+      // Populate Date Dropdown
+      const select = document.getElementById('historyDateSelect');
+      select.innerHTML = '';
+
+      const dates = Object.keys(dailyDB).sort().reverse();
+      if (dates.length === 0) dates.push(todayKey);
+
+      dates.forEach(dKey => {
+        const opt = document.createElement('option');
+        opt.value = dKey;
+        const total = dailyDB[dKey]?.totalCount || 0;
+        const isToday = dKey === todayKey ? " (Today)" : "";
+        opt.textContent = `${getFormattedDate(dKey)}${isToday} — ${total} Updates`;
+        select.appendChild(opt);
+      });
+
+      select.value = dates[0];
+      renderSelectedDateHistory();
+      document.getElementById('historyModal').style.display = 'flex';
+      playClickSound();
+    }
+
+    function renderSelectedDateHistory() {
+      const select = document.getElementById('historyDateSelect');
+      const selectedDate = select.value;
+      const dailyDB = JSON.parse(localStorage.getItem('aadhaar_db_daily_history') || '{}');
+      const dayData = dailyDB[selectedDate] || {
+        date: selectedDate,
+        totalCount: 0,
+        categories: { under5: {}, '5to18': {}, above18: {} },
+        seatsSnapshot: {}
+      };
+
+      // Header summary
+      document.getElementById('histDateTitle').innerText = `${getFormattedDate(selectedDate)} (Recorded)`;
+      document.getElementById('histTotalNumber').innerText = `${dayData.totalCount || 0} Completed`;
+
+      // 3 Age breakdown counts
+      let u5 = 0, m18 = 0, a18 = 0;
+      for (let s in dayData.categories?.under5) u5 += dayData.categories.under5[s];
+      for (let s in dayData.categories?.['5to18']) m18 += dayData.categories['5to18'][s];
+      for (let s in dayData.categories?.above18) a18 += dayData.categories.above18[s];
+
+      document.getElementById('histUnder5Count').innerText = u5;
+      document.getElementById('hist5to18Count').innerText = m18;
+      document.getElementById('histAbove18Count').innerText = a18;
+
+      // Service breakdown list
+      const sContainer = document.getElementById('historyServiceList');
+      sContainer.innerHTML = '';
+      buttonOrder.forEach(sKey => {
+        const item = serviceMeta[sKey];
+        if (!item) return;
+        const totalForService = (dayData.categories?.under5?.[sKey] || 0) +
+                                (dayData.categories?.['5to18']?.[sKey] || 0) +
+                                (dayData.categories?.above18?.[sKey] || 0);
+
+        const row = document.createElement('div');
+        row.className = 'history-service-row';
+        row.innerHTML = `
+          <span>${item.title}</span>
+          <span class="history-badge-count">${totalForService}</span>
+        `;
+        sContainer.appendChild(row);
+      });
+
+      // Operator Seats on this date
+      const seatsContainer = document.getElementById('historySeatsList');
+      seatsContainer.innerHTML = '';
+      const seats = dayData.seatsSnapshot || {};
+      let hasSeatInfo = false;
+      let seatsHtml = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">';
+      for (let i = 1; i <= 18; i++) {
+        const s = seats[i];
+        if (s && s.name) {
+          hasSeatInfo = true;
+          const statusIcon = s.status === 'closed' ? '🔴' : '🟢';
+          seatsHtml += `<div><b>#${i < 10 ? '0' + i : i}:</b> ${s.name} ${statusIcon}</div>`;
+        }
+      }
+      seatsHtml += '</div>';
+      seatsContainer.innerHTML = hasSeatInfo ? seatsHtml : '<span style="color:#94a3b8;">No operator names recorded on this day.</span>';
+
+      // Audit Log for selected date
+      const auditContainer = document.getElementById('historyAuditList');
+      auditContainer.innerHTML = '';
+      const txLogs = JSON.parse(localStorage.getItem('aadhaar_db_transactions') || '[]');
+      const filteredLogs = txLogs.filter(t => t.date === selectedDate);
+
+      if (filteredLogs.length === 0) {
+        auditContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:12px;">No individual transaction timestamps for this date.</div>';
+      } else {
+        filteredLogs.forEach(t => {
+          const item = document.createElement('div');
+          item.className = 'audit-log-item';
+          item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+              <b style="color:var(--primary);">${t.serviceTitle}</b>
+              <span class="audit-time">${t.time}</span>
+            </div>
+            <div style="color:#475569; font-size:11px;">
+              ${t.ageLabel} • <b>Seat #${t.seatNum < 10 ? '0' + t.seatNum : t.seatNum} (${t.operator})</b>
+            </div>
+          `;
+          auditContainer.appendChild(item);
+        });
+      }
+    }
+
+    function switchHistoryTab(tab) {
+      activeHistoryTab = tab;
+      const tabSummary = document.getElementById('tabBtnSummary');
+      const tabAudit = document.getElementById('tabBtnAudit');
+      const viewSummary = document.getElementById('historyViewSummary');
+      const viewAudit = document.getElementById('historyViewAudit');
+
+      if (tab === 'summary') {
+        tabSummary.classList.add('active');
+        tabAudit.classList.remove('active');
+        viewSummary.style.display = 'block';
+        viewAudit.style.display = 'none';
+      } else {
+        tabSummary.classList.remove('active');
+        tabAudit.classList.add('active');
+        viewSummary.style.display = 'none';
+        viewAudit.style.display = 'block';
+      }
+      playClickSound();
+    }
+
+    function closeHistoryModal(e) {
+      document.getElementById('historyModal').style.display = 'none';
+      playClickSound();
+    }
+
+    function exportHistoryCSV() {
+      const dailyDB = JSON.parse(localStorage.getItem('aadhaar_db_daily_history') || '{}');
+      const dates = Object.keys(dailyDB).sort();
+
+      if (dates.length === 0) {
+        alert("No historical data to export yet!");
+        return;
+      }
+
+      let csv = "Date,Formatted Date,Age Category,Service Name,Count\n";
+      const ageLabels = {
+        under5: "Under 5 Yrs (Form 5)",
+        '5to18': "5 to 18 Yrs (Form 3)",
+        above18: "18+ Adults (Form 1)"
+      };
+
+      dates.forEach(dKey => {
+        const dObj = dailyDB[dKey];
+        if (!dObj) return;
+        ['under5', '5to18', 'above18'].forEach(cat => {
+          const catCounts = dObj.categories?.[cat] || {};
+          buttonOrder.forEach(sKey => {
+            const cnt = catCounts[sKey] || 0;
+            if (cnt > 0) {
+              csv += `"${dKey}","${dObj.dateStr || dKey}","${ageLabels[cat]}","${serviceMeta[sKey]?.title || sKey}",${cnt}\n`;
+            }
+          });
+        });
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Aadhaar_History_Master_${new Date().toISOString().slice(0, 10)}.csv`);
+      a.click();
+      showToast("✓ Historical master database downloaded!");
+    }
+
+    function clearHistoryPrompt() {
+      if (confirm("Are you sure you want to clear historical database logs? Today's active count will remain safe.")) {
+        localStorage.removeItem('aadhaar_db_transactions');
+        localStorage.removeItem('aadhaar_db_daily_history');
+        openHistoryModal();
+        showToast("History logs cleared!");
+      }
+    }
+
+    // ---------------- BULK WHATSAPP OPERATOR ROSTER ----------------
+    function openRosterModal() {
+      document.getElementById('rosterModal').style.display = 'flex';
+      playClickSound();
+    }
+
+    function closeRosterModal(e) {
+      document.getElementById('rosterModal').style.display = 'none';
+      playClickSound();
+    }
+
+    function applyBulkRoster() {
+      const rawText = document.getElementById('rosterTextInput').value.trim();
+      if (!rawText) {
+        alert("Please paste the operator roster list first!");
+        return;
+      }
+
+      // Split by lines
+      let lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+      // If single comma-separated line
+      if (lines.length === 1 && lines[0].includes(',')) {
+        lines = lines[0].split(',').map(l => l.trim()).filter(l => l.length > 0);
+      }
+
+      const cleanedNames = [];
+      lines.forEach(line => {
+        // Skip obvious WhatsApp header titles
+        if (/^(roster|today|duty|date|counter|operator|attendance|seat|kendra)/i.test(line) && line.length < 35 && !/\d+[\.\:\-]/.test(line)) {
+          return;
+        }
+        // Clean prefix numbers like "1.", "1 -", "Seat 1:", "Desk 1:", "#1"
+        let cleaned = line.replace(/^(?:seat|desk|counter|no\.?|#)?\s*\d+\s*[\.\:\-\)\–\—]\s*/i, '').trim();
+        cleaned = cleaned.replace(/^[\-\•\*\>]\s*/, '').trim();
+        // Clean suffix like "- Desk 1", "(Operator)"
+        cleaned = cleaned.replace(/\s*[\-\–]\s*(?:desk|seat|counter)\s*\d+/i, '').trim();
+        cleaned = cleaned.replace(/\s*\([^)]*\)$/, '').trim();
+        if (cleaned && cleaned.length > 1) {
+          cleanedNames.push(cleaned);
+        }
+      });
+
+      if (cleanedNames.length === 0) {
+        alert("Could not detect any operator names. Please check the text format.");
+        return;
+      }
+
+      const todayKey = getTodayDateKey();
+      for (let i = 1; i <= 18; i++) {
+        const name = cleanedNames[i - 1] || '';
+        seatMap[i] = {
+          name: name,
+          status: 'open'
+        };
+      }
+
+      // Save with today's date so next day it automatically resets!
+      localStorage.setItem('aadhaar_18_seats_v2', JSON.stringify(seatMap));
+      localStorage.setItem('aadhaar_seats_roster_date', todayKey);
+
+      render18Seats();
+      closeRosterModal();
+      syncTodayDataToFirebase();
+      showToast(`✓ Assigned ${Math.min(cleanedNames.length, 18)} operators to seats!`);
+    }
+
+    function clearAllSeatsPrompt() {
+      if (confirm("Clear all 18 operator names for today?")) {
+        for (let i = 1; i <= 18; i++) {
+          seatMap[i] = { name: '', status: 'open' };
+        }
+        localStorage.setItem('aadhaar_18_seats_v2', JSON.stringify(seatMap));
+        render18Seats();
+        syncTodayDataToFirebase();
+        showToast("All seats cleared");
+        closeRosterModal();
+      }
+    }
+
+    // ---------------- CUSTOM ADVANCE CARDS BUILDER (ADVANCE OPTIONS) ----------------
+    function openAddCardModal() {
+      applyAdvanceTemplate('advance_name');
+      renderExistingCustomCardsList();
+      document.getElementById('addCardModal').style.display = 'flex';
+      playClickSound();
+    }
+
+    function closeAddCardModal(e) {
+      document.getElementById('addCardModal').style.display = 'none';
+      playClickSound();
+    }
+
+    function renderInheritedBasePreview() {
+      const baseKey = document.getElementById('advBaseServiceSelect').value;
+      const previewList = document.getElementById('inheritedPreviewList');
+      const countBadge = document.getElementById('inheritedCountBadge');
+      if (!previewList) return;
+
+      if (!baseKey || baseKey === 'none') {
+        previewList.innerHTML = '<span style="color: #94a3b8;">None selected. This card will contain only custom fields.</span>';
+        if (countBadge) countBadge.innerText = '0';
+        return;
+      }
+
+      const fields = customMandatoryFields[baseKey] || defaultMandatoryFields[baseKey] || [];
+      if (countBadge) countBadge.innerText = fields.length;
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 3px;">';
+      fields.forEach((f, idx) => {
+        html += `<div><b>${idx + 1}. ${f.num} (${f.name}):</b> <span style="color: #334155;">${f.val}</span></div>`;
+      });
+      html += '</div>';
+      previewList.innerHTML = html;
+    }
+
+    function applyAdvanceTemplate(tplType) {
+      const titleInput = document.getElementById('advCardTitleInput');
+      const baseSelect = document.getElementById('advBaseServiceSelect');
+      const container = document.getElementById('advanceExtraFieldsContainer');
+      container.innerHTML = '';
+
+      if (tplType === 'advance_name') {
+        if (titleInput) titleInput.value = "Advance Name (Gazette / Limit)";
+        if (baseSelect) baseSelect.value = "name";
+        addAdvanceFieldRow("Field 5(b)(i) Extra", "Gazette Notification", "Mandatory Gazette publication copy for 2nd name change or legal change", "ADVANCE REQ");
+        addAdvanceFieldRow("UIDAI RO Order", "Regional Office Exception Approval", "Attach official UIDAI Regional Office (RO) limit approval slip", "ADVANCE REQ");
+        addAdvanceFieldRow("Supporting ID", "Old Identity Document", "Original identity proof matching previous name for verification", "ADVANCE REQ");
+      } else if (tplType === 'advance_dob') {
+        if (titleInput) titleInput.value = "Advance DOB (Exception)";
+        if (baseSelect) baseSelect.value = "dob";
+        addAdvanceFieldRow("UIDAI Exception", "Regional Office Order", "RO Approval Order for DOB exception or >3 years gap", "ADVANCE REQ");
+        addAdvanceFieldRow("PDB Standard", "Strict Birth Certificate", "Birth Certificate issued by Registrar of Births & Deaths only", "ADVANCE REQ");
+      } else {
+        if (titleInput) titleInput.value = "";
+        if (baseSelect) baseSelect.value = "name";
+        addAdvanceFieldRow("Field X", "Extra Requirement", "Specify additional mandatory instructions here...", "ADVANCE REQ");
+      }
+
+      renderInheritedBasePreview();
+      playClickSound();
+    }
+
+    function addAdvanceFieldRow(num = '', name = '', val = '', req = 'ADVANCE REQ') {
+      const container = document.getElementById('advanceExtraFieldsContainer');
+      if (!container) return;
+
+      const row = document.createElement('div');
+      row.className = 'adv-field-row';
+      row.style.background = '#f8fafc';
+      row.style.border = '1px solid #bfdbfe';
+      row.style.padding = '8px 10px';
+      row.style.borderRadius = '8px';
+      row.style.marginBottom = '8px';
+
+      const safeNum = (num || '').replace(/"/g, '&quot;');
+      const safeName = (name || '').replace(/"/g, '&quot;');
+      const safeVal = (val || '').replace(/"/g, '&quot;');
+
+      row.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <span style="font-size: 11px; font-weight: 700; color: #1e40af;">⚡ Extra Advance Field</span>
+          <button type="button" onclick="this.closest('.adv-field-row').remove()" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 11px; font-weight: 700;">🗑️ Remove</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px;">
+          <div>
+            <label style="font-size: 10px; color: #64748b; font-weight: 600;">Box / Field No:</label>
+            <input type="text" class="editor-input adv-f-num" style="padding: 5px 8px; font-size: 11px; margin-bottom: 0;" placeholder="e.g. Field 5(b)(i) Extra" value="${safeNum}">
+          </div>
+          <div>
+            <label style="font-size: 10px; color: #64748b; font-weight: 600;">Field Name:</label>
+            <input type="text" class="editor-input adv-f-name" style="padding: 5px 8px; font-size: 11px; margin-bottom: 0;" placeholder="e.g. Gazette Notification" value="${safeName}">
+          </div>
+        </div>
+        <div>
+          <label style="font-size: 10px; color: #64748b; font-weight: 600;">Instruction / What to Fill:</label>
+          <input type="text" class="editor-input adv-f-val" style="padding: 5px 8px; font-size: 11px; margin-bottom: 0;" placeholder="Write mandatory instruction..." value="${safeVal}">
+        </div>
+      `;
+
+      container.appendChild(row);
+    }
+
+    function saveAndAddAdvanceCard() {
+      const titleInput = document.getElementById('advCardTitleInput');
+      const title = (titleInput ? titleInput.value : '').trim();
+      if (!title) {
+        alert("Please enter a Title for this Advance Card (e.g. 'Advance Name')");
+        return;
+      }
+
+      const baseKey = document.getElementById('advBaseServiceSelect').value;
+
+      // Gather extra fields
+      const rows = document.querySelectorAll('#advanceExtraFieldsContainer .adv-field-row');
+      const extraFields = [];
+      rows.forEach(r => {
+        const num = (r.querySelector('.adv-f-num')?.value || '').trim();
+        const name = (r.querySelector('.adv-f-name')?.value || '').trim();
+        const val = (r.querySelector('.adv-f-val')?.value || '').trim();
+        if (num || name || val) {
+          extraFields.push({
+            num: num || "Advance Box",
+            name: name || "Requirement",
+            val: val || "Mandatory document / step",
+            req: "ADVANCE REQ"
+          });
+        }
+      });
+
+      // Generate card ID
+      const cardId = 'adv_' + Date.now();
+      const newCard = {
+        id: cardId,
+        title: title,
+        short: title.slice(0, 10),
+        baseKey: baseKey,
+        extraFields: extraFields
+      };
+
+      customCardsList.push(newCard);
+      localStorage.setItem('aadhaar_custom_cards_v1', JSON.stringify(customCardsList));
+
+      // Register and apply
+      registerCustomCards();
+      localStorage.setItem('aadhaar_custom_button_order', JSON.stringify(buttonOrder));
+
+      renderPills();
+      closeAddCardModal();
+      syncTodayDataToFirebase();
+      showToast(`✓ Added "${title}" card to main screen!`);
+    }
+
+    function deleteCustomCard(cardId) {
+      const c = customCardsList.find(x => x.id === cardId);
+      const title = c ? c.title : "this custom card";
+      if (!confirm(`Are you sure you want to remove "${title}" from the main screen?`)) {
+        return;
+      }
+
+      customCardsList = customCardsList.filter(x => x.id !== cardId);
+      localStorage.setItem('aadhaar_custom_cards_v1', JSON.stringify(customCardsList));
+
+      buttonOrder = buttonOrder.filter(k => k !== cardId);
+      localStorage.setItem('aadhaar_custom_button_order', JSON.stringify(buttonOrder));
+
+      delete serviceMeta[cardId];
+      delete customMandatoryFields[cardId];
+
+      renderPills();
+      renderExistingCustomCardsList();
+      showToast(`Removed "${title}" card`);
+    }
+
+    function renderExistingCustomCardsList() {
+      const list = document.getElementById('existingCustomCardsList');
+      if (!list) return;
+
+      if (customCardsList.length === 0) {
+        list.innerHTML = '<span style="font-size: 11px; color: #94a3b8;">No custom advance cards added yet.</span>';
+        return;
+      }
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 6px;">';
+      customCardsList.forEach(c => {
+        const baseName = serviceMeta[c.baseKey]?.title || c.baseKey || 'None';
+        const extraCount = (c.extraFields || []).length;
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px;">
+            <div>
+              <div style="font-size: 12px; font-weight: 700; color: #1e3a8a;">${c.title}</div>
+              <div style="font-size: 10px; color: #64748b;">Inherits: <b>${baseName}</b> • ${extraCount} Extra Field(s)</div>
+            </div>
+            <button type="button" onclick="deleteCustomCard('${c.id}')" style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              🗑️ Delete
+            </button>
+          </div>
+        `;
+      });
+      html += '</div>';
+      list.innerHTML = html;
+    }
+
+    // ---------------- INTERNAL FIREBASE CLOUD DATABASE CONNECTOR ----------------
+    // Connects silently in the background without UI display, badges, or modals.
+    const INTERNAL_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBypapParC-2uz57r2WgmS6st-rF_dT9iE",
+      authDomain: "aadhaar-operator-desk.firebaseapp.com",
+      projectId: "aadhaar-operator-desk",
+      storageBucket: "aadhaar-operator-desk.firebasestorage.app",
+      messagingSenderId: "462901845898",
+      appId: "1:462901845898:web:7f8c0b147c916cec023273",
+      measurementId: "G-WQFGMG7SZN"
+    };
+
+    let firebaseApp = null;
+    let firestoreDb = null;
+    let isFirebaseActive = false;
+
+    function initFirebase() {
+      let config = null;
+      try {
+        const saved = localStorage.getItem('aadhaar_firebase_config');
+        if (saved) {
+          config = JSON.parse(saved);
+        } else if (INTERNAL_FIREBASE_CONFIG && INTERNAL_FIREBASE_CONFIG.apiKey) {
+          config = INTERNAL_FIREBASE_CONFIG;
+        }
+      } catch (e) {}
+
+      if (!config || !config.apiKey || typeof firebase === 'undefined') {
+        isFirebaseActive = false;
+        return;
+      }
+
+      try {
+        if (!firebase.apps.length) {
+          firebaseApp = firebase.initializeApp(config);
+        } else {
+          firebaseApp = firebase.app();
+        }
+        firestoreDb = firebase.firestore();
+
+        // Enable offline persistence in Firestore
+        firestoreDb.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+        isFirebaseActive = true;
+      } catch (e) {
+        isFirebaseActive = false;
+      }
+    }
+
+    function syncTransactionToFirebase(tx) {
+      if (!isFirebaseActive || !firestoreDb) return;
+      try {
+        firestoreDb.collection('aadhaar_transactions').doc(tx.id).set(tx).catch(() => {});
+        const dateKey = tx.date;
+        firestoreDb.collection('aadhaar_daily_tallies').doc(dateKey).set({
+          date: dateKey,
+          dateStr: tx.dateStr,
+          totalCount: firebase.firestore.FieldValue.increment(1),
+          [`counts_${tx.age}_${tx.service}`]: firebase.firestore.FieldValue.increment(1),
+          lastUpdated: tx.time,
+          lastOperator: tx.operator,
+          seatsSnapshot: seatMap
+        }, { merge: true }).catch(() => {});
+      } catch (e) {}
+    }
+
+    function syncTodayDataToFirebase() {
+      if (!isFirebaseActive || !firestoreDb) return;
+      const todayKey = getTodayDateKey();
+      try {
+        let curSum = 0;
+        ['under5', '5to18', 'above18'].forEach(c => {
+          for (let s in store[c]) curSum += store[c][s];
+        });
+
+        firestoreDb.collection('aadhaar_daily_tallies').doc(todayKey).set({
+          date: todayKey,
+          dateStr: getFormattedDate(todayKey),
+          totalCount: curSum,
+          categories: store,
+          seatsSnapshot: seatMap,
+          lastUpdated: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+        }, { merge: true }).catch(() => {});
+      } catch (e) {}
+    }
+
+    // ---------------- FULLPAGE AADHAAR ANIMATION SPLASH LOADING ----------------
+    let splashDismissed = false;
+    function runSplashScreen() {
+      const splash = document.getElementById('aadhaarSplash');
+      const bar = document.getElementById('splashBar');
+      const status = document.getElementById('splashStatusText');
+      if (!splash) return;
+
+      const steps = [
+        { pct: 28, text: "Verifying Operator Terminal..." },
+        { pct: 62, text: "Initializing Local Database..." },
+        { pct: 88, text: "Syncing UIDAI Form Guides..." },
+        { pct: 100, text: "Terminal Ready!" }
+      ];
+
+      let currentStep = 0;
+      const interval = setInterval(() => {
+        if (splashDismissed) {
+          clearInterval(interval);
+          return;
+        }
+        if (currentStep < steps.length) {
+          if (bar) bar.style.width = steps[currentStep].pct + '%';
+          if (status) status.innerText = steps[currentStep].text;
+          currentStep++;
+        } else {
+          clearInterval(interval);
+          setTimeout(dismissSplash, 350);
+        }
+      }, 340);
+    }
+
+    function dismissSplash() {
+      if (splashDismissed) return;
+      splashDismissed = true;
+      const splash = document.getElementById('aadhaarSplash');
+      if (splash) {
+        splash.classList.add('fade-out');
+        setTimeout(() => {
+          splash.style.display = 'none';
+        }, 460);
+      }
+    }
+
+    // INIT
+    window.onload = function() {
+      runSplashScreen();
+      registerCustomCards();
+      initDatabase();
+      renderPills();
+      selectAge('above18');
+      render18Seats();
+    };
+  </script>
+</body>
+</html>

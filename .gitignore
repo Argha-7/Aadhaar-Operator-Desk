@@ -1,0 +1,14 @@
+# OS & IDE
+.DS_Store
+Thumbs.db
+*.tmp
+.vscode/
+.idea/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Scratch files
+scratch/
+.gemini/
